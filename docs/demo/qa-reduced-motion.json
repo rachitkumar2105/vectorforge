@@ -1,15 +1,1 @@
-{
- "matches": true,
- "heroAnimationDuration": "1e-05s",
- "heroAnimationIterations": "1",
- "visualizerButtons": [
-  "Step to next hop",
-  "Jump to result",
-  "Reset to start",
-  "Random query"
- ],
- "hasPlay": false,
- "manualNote": true,
- "readoutBefore": "position\nlayer 3\nexpansions\n0\ndistances computed\n1\nexact search needs\n240\ntop-5 matched\n...",
- "readoutAfterTwoSteps": "position\nlayer 2\nexpansions\n1\ndistances computed\n3\nexact search needs\n240\ntop-5 matched\n..."
-}
+"{\"matches\":true,\"heroAnimationDuration\":\"1e-05s\",\"heroAnimationIterations\":\"1\",\"visualizerButtons\":[\"Step to next hop\",\"Jump to result\",\"Reset to start\",\"Random query\"],\"hasPlay\":false,\"manualNote\":true,\"readoutBefore\":\"position\\nlayer 3\\nexpansions\\n0\\ndistances computed\\n1\\nexact search needs\\n240\\ntop-5 matched\\n...\",\"readoutAfterTwoSteps\":\"position\\nlayer 2\\nexpansions\\n1\\ndistances computed\\n3\\nexact search needs\\n240\\ntop-5 matched\\n...\"}"

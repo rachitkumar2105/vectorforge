@@ -1,0 +1,52 @@
+{
+ "command": "pnpm dlx lighthouse@12.8.2 http://localhost:3000/ --form-factor=mobile --only-categories=performance,accessibility,best-practices,seo --chrome-flags=--headless=new",
+ "conditions": "engine container stopped (site configured with VECTORFORGE_ENGINE_URL); machine CPU 30-50% busy with unrelated work",
+ "runs": [
+  {
+   "run": 1,
+   "fetched": "2026-10-26T15:12:02.524Z",
+   "runtimeError": null,
+   "scores": {
+    "performance": 93,
+    "accessibility": 100,
+    "best-practices": 100,
+    "seo": 100
+   },
+   "metrics": {
+    "first-contentful-paint": "1.0 s",
+    "largest-contentful-paint": "2.6 s",
+    "total-blocking-time": "210 ms",
+    "cumulative-layout-shift": "0"
+   }
+  },
+  {
+   "run": 2,
+   "fetched": "2026-10-26T15:12:25.100Z",
+   "runtimeError": "NO_NAVSTART",
+   "scores": {
+    "performance": null,
+    "accessibility": 100,
+    "best-practices": null,
+    "seo": 100
+   },
+   "metrics": null
+  },
+  {
+   "run": 3,
+   "fetched": "2026-10-26T15:12:44.490Z",
+   "runtimeError": null,
+   "scores": {
+    "performance": 92,
+    "accessibility": 100,
+    "best-practices": 100,
+    "seo": 100
+   },
+   "metrics": {
+    "first-contentful-paint": "0.9 s",
+    "largest-contentful-paint": "2.5 s",
+    "total-blocking-time": "250 ms",
+    "cumulative-layout-shift": "0"
+   }
+  }
+ ]
+}
