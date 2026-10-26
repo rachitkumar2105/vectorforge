@@ -115,3 +115,25 @@ def test_seed_dir_from_env(tmp_path: Path) -> None:
     )
     assert s.seed_dir == tmp_path / "s"
     assert Settings.from_env({"VECTORFORGE_ADMIN_KEY": ADMIN}).seed_dir is None
+
+
+def test_prebuilt_data_dir_loads_without_reseeding(tmp_path: Path) -> None:
+    # Build time (Dockerfile): seed into a data dir and checkpoint it. Run time: the engine loads
+    # that snapshot instead of rebuilding the graph, which matters on a 0.1-CPU free instance.
+    from vectorforge.service.seed import build_data_dir
+
+    seed = tmp_path / "seed"
+    seed.mkdir()
+    vecs = write_seed(seed)
+    data = tmp_path / "baked"
+    assert build_data_dir(seed, data) == 40
+    assert (data / "demo" / "manifest.json").exists()
+    with TestClient(create_app(settings(data, seed))) as c:
+        info = c.get("/collections/demo", headers={"X-API-Key": DEMO}).json()
+        assert info["count"] == 40
+        r = c.post(
+            "/collections/demo/search",
+            json={"vector": vecs[3].tolist(), "k": 1},
+            headers={"X-API-Key": DEMO},
+        )
+        assert r.json()["results"][0]["id"] == "d3"
