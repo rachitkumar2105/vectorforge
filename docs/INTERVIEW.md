@@ -57,7 +57,7 @@ selectivity the collection skips the graph and scans just the matching vectors e
 
 ## 7. Why is your implementation slower than FAISS, and by how much?
 
-On SIFT-200k at the same recall, FAISS HNSW is TODO-NUM× faster on the same core. Each hop in
+At the same recall@10 (>= 0.954) FAISS HNSW is 9.5× faster on SIFT-200k and 12.6× faster on GloVe-200k (>= 0.959), same core, same M and ef_construction. Each hop in
 our code is Python: heap pushes, set lookups, and a NumPy call on a handful of vectors, where
 call overhead dwarfs the arithmetic. FAISS runs that loop in C++, with SIMD distance kernels over
 contiguous memory and prefetching. Same algorithm, same parameters; the constant factor is the

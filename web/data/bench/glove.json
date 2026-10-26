@@ -1,0 +1,479 @@
+{
+ "dataset": {
+  "name": "GloVe-100d (6B tokens)",
+  "subset": "200,000 most frequent of 400,000 words as base; 1,000 random held-out words as queries (seed 0)",
+  "dim": 100,
+  "metric": "cosine",
+  "source": "https://nlp.stanford.edu/data/glove.6B.zip"
+ },
+ "n_base": 200000,
+ "n_queries": 1000,
+ "k": 10,
+ "series": [
+  {
+   "id": "vf-flat",
+   "label": "VectorForge flat (exact)",
+   "engine": "vectorforge",
+   "params": {},
+   "sweep": null,
+   "build_s": 0.08029209999949671,
+   "memory_bytes": 80000000,
+   "memory_note": "float32 vectors",
+   "rss_delta_bytes": 0,
+   "points": [
+    {
+     "param": 0,
+     "recall_at_1": 1.0,
+     "recall_at_10": 1.0,
+     "qps": 27.9,
+     "p50_ms": 35.218,
+     "p95_ms": 39.225,
+     "p99_ms": 44.99
+    }
+   ]
+  },
+  {
+   "id": "vf-hnsw",
+   "label": "VectorForge HNSW",
+   "engine": "vectorforge",
+   "params": {
+    "M": 16,
+    "ef_construction": 200,
+    "compact_bytes": 99356368
+   },
+   "sweep": "ef_search",
+   "build_s": 2319.429707800009,
+   "memory_bytes": 162811048,
+   "memory_note": "measured with sys.getsizeof: float32 vectors + Python list-of-lists graph",
+   "rss_delta_bytes": 0,
+   "points": [
+    {
+     "param": 10,
+     "recall_at_1": 0.664,
+     "recall_at_10": 0.599,
+     "qps": 870.9,
+     "p50_ms": 1.102,
+     "p95_ms": 1.611,
+     "p99_ms": 1.939
+    },
+    {
+     "param": 20,
+     "recall_at_1": 0.797,
+     "recall_at_10": 0.7455,
+     "qps": 536.6,
+     "p50_ms": 1.728,
+     "p95_ms": 2.883,
+     "p99_ms": 3.801
+    },
+    {
+     "param": 40,
+     "recall_at_1": 0.888,
+     "recall_at_10": 0.8576,
+     "qps": 374.6,
+     "p50_ms": 2.485,
+     "p95_ms": 3.925,
+     "p99_ms": 4.867
+    },
+    {
+     "param": 80,
+     "recall_at_1": 0.95,
+     "recall_at_10": 0.9304,
+     "qps": 230.5,
+     "p50_ms": 4.108,
+     "p95_ms": 6.151,
+     "p99_ms": 7.191
+    },
+    {
+     "param": 120,
+     "recall_at_1": 0.971,
+     "recall_at_10": 0.959,
+     "qps": 167.1,
+     "p50_ms": 5.711,
+     "p95_ms": 8.588,
+     "p99_ms": 10.505
+    },
+    {
+     "param": 200,
+     "recall_at_1": 0.983,
+     "recall_at_10": 0.9773,
+     "qps": 106.0,
+     "p50_ms": 8.96,
+     "p95_ms": 13.857,
+     "p99_ms": 17.347
+    },
+    {
+     "param": 400,
+     "recall_at_1": 0.993,
+     "recall_at_10": 0.9905,
+     "qps": 49.7,
+     "p50_ms": 19.422,
+     "p95_ms": 28.888,
+     "p99_ms": 35.41
+    }
+   ]
+  },
+  {
+   "id": "vf-ivf",
+   "label": "VectorForge IVF-Flat",
+   "engine": "vectorforge",
+   "params": {
+    "nlist": 512,
+    "quantization": "none"
+   },
+   "sweep": "nprobe",
+   "build_s": 95.1394425999897,
+   "memory_bytes": 81804800,
+   "memory_note": "vectors (float32 or int8 codes) + centroids + 8 B per id",
+   "rss_delta_bytes": 0,
+   "points": [
+    {
+     "param": 1,
+     "recall_at_1": 0.406,
+     "recall_at_10": 0.3913,
+     "qps": 1539.5,
+     "p50_ms": 0.572,
+     "p95_ms": 1.108,
+     "p99_ms": 1.498
+    },
+    {
+     "param": 2,
+     "recall_at_1": 0.557,
+     "recall_at_10": 0.5199,
+     "qps": 1020.7,
+     "p50_ms": 0.859,
+     "p95_ms": 1.668,
+     "p99_ms": 2.429
+    },
+    {
+     "param": 4,
+     "recall_at_1": 0.689,
+     "recall_at_10": 0.6484,
+     "qps": 553.5,
+     "p50_ms": 1.752,
+     "p95_ms": 2.788,
+     "p99_ms": 3.417
+    },
+    {
+     "param": 8,
+     "recall_at_1": 0.824,
+     "recall_at_10": 0.7801,
+     "qps": 315.8,
+     "p50_ms": 3.059,
+     "p95_ms": 4.157,
+     "p99_ms": 5.159
+    },
+    {
+     "param": 16,
+     "recall_at_1": 0.899,
+     "recall_at_10": 0.8779,
+     "qps": 175.1,
+     "p50_ms": 5.548,
+     "p95_ms": 7.37,
+     "p99_ms": 8.534
+    },
+    {
+     "param": 32,
+     "recall_at_1": 0.965,
+     "recall_at_10": 0.9454,
+     "qps": 86.6,
+     "p50_ms": 11.184,
+     "p95_ms": 15.128,
+     "p99_ms": 18.554
+    },
+    {
+     "param": 64,
+     "recall_at_1": 0.99,
+     "recall_at_10": 0.9816,
+     "qps": 48.5,
+     "p50_ms": 19.751,
+     "p95_ms": 27.042,
+     "p99_ms": 29.797
+    },
+    {
+     "param": 128,
+     "recall_at_1": 1.0,
+     "recall_at_10": 0.9961,
+     "qps": 27.6,
+     "p50_ms": 34.247,
+     "p95_ms": 48.532,
+     "p99_ms": 56.32
+    }
+   ]
+  },
+  {
+   "id": "vf-ivf-int8",
+   "label": "VectorForge IVF + int8",
+   "engine": "vectorforge",
+   "params": {
+    "nlist": 512,
+    "quantization": "int8"
+   },
+   "sweep": "nprobe",
+   "build_s": 66.39719679998234,
+   "memory_bytes": 21805600,
+   "memory_note": "vectors (float32 or int8 codes) + centroids + 8 B per id",
+   "rss_delta_bytes": 0,
+   "points": [
+    {
+     "param": 1,
+     "recall_at_1": 0.404,
+     "recall_at_10": 0.3892,
+     "qps": 1900.3,
+     "p50_ms": 0.439,
+     "p95_ms": 1.07,
+     "p99_ms": 1.535
+    },
+    {
+     "param": 2,
+     "recall_at_1": 0.552,
+     "recall_at_10": 0.5171,
+     "qps": 1088.3,
+     "p50_ms": 0.664,
+     "p95_ms": 2.005,
+     "p99_ms": 3.783
+    },
+    {
+     "param": 4,
+     "recall_at_1": 0.683,
+     "recall_at_10": 0.6444,
+     "qps": 686.2,
+     "p50_ms": 1.197,
+     "p95_ms": 2.776,
+     "p99_ms": 3.521
+    },
+    {
+     "param": 8,
+     "recall_at_1": 0.816,
+     "recall_at_10": 0.7749,
+     "qps": 259.7,
+     "p50_ms": 3.49,
+     "p95_ms": 6.369,
+     "p99_ms": 8.659
+    },
+    {
+     "param": 16,
+     "recall_at_1": 0.888,
+     "recall_at_10": 0.8711,
+     "qps": 128.2,
+     "p50_ms": 7.425,
+     "p95_ms": 11.228,
+     "p99_ms": 14.706
+    },
+    {
+     "param": 32,
+     "recall_at_1": 0.953,
+     "recall_at_10": 0.9357,
+     "qps": 69.3,
+     "p50_ms": 13.689,
+     "p95_ms": 20.448,
+     "p99_ms": 27.833
+    },
+    {
+     "param": 64,
+     "recall_at_1": 0.977,
+     "recall_at_10": 0.969,
+     "qps": 42.3,
+     "p50_ms": 22.484,
+     "p95_ms": 31.838,
+     "p99_ms": 43.96
+    },
+    {
+     "param": 128,
+     "recall_at_1": 0.987,
+     "recall_at_10": 0.9813,
+     "qps": 23.3,
+     "p50_ms": 41.38,
+     "p95_ms": 55.284,
+     "p99_ms": 69.198
+    }
+   ]
+  },
+  {
+   "id": "faiss-hnsw",
+   "label": "FAISS IndexHNSWFlat",
+   "engine": "faiss",
+   "params": {
+    "M": 16,
+    "ef_construction": 200
+   },
+   "sweep": "ef_search",
+   "build_s": 113.61518240001169,
+   "memory_bytes": 108859322,
+   "memory_note": "serialized index size",
+   "rss_delta_bytes": 0,
+   "points": [
+    {
+     "param": 10,
+     "recall_at_1": 0.713,
+     "recall_at_10": 0.6211,
+     "qps": 10829.8,
+     "p50_ms": 0.083,
+     "p95_ms": 0.151,
+     "p99_ms": 0.221
+    },
+    {
+     "param": 20,
+     "recall_at_1": 0.842,
+     "recall_at_10": 0.7706,
+     "qps": 8803.6,
+     "p50_ms": 0.098,
+     "p95_ms": 0.204,
+     "p99_ms": 0.272
+    },
+    {
+     "param": 40,
+     "recall_at_1": 0.928,
+     "recall_at_10": 0.8795,
+     "qps": 5755.2,
+     "p50_ms": 0.148,
+     "p95_ms": 0.308,
+     "p99_ms": 0.411
+    },
+    {
+     "param": 80,
+     "recall_at_1": 0.961,
+     "recall_at_10": 0.9459,
+     "qps": 3144.9,
+     "p50_ms": 0.276,
+     "p95_ms": 0.519,
+     "p99_ms": 0.655
+    },
+    {
+     "param": 120,
+     "recall_at_1": 0.976,
+     "recall_at_10": 0.9699,
+     "qps": 2103.6,
+     "p50_ms": 0.425,
+     "p95_ms": 0.749,
+     "p99_ms": 0.946
+    },
+    {
+     "param": 200,
+     "recall_at_1": 0.988,
+     "recall_at_10": 0.9875,
+     "qps": 1054.4,
+     "p50_ms": 0.858,
+     "p95_ms": 1.462,
+     "p99_ms": 2.009
+    },
+    {
+     "param": 400,
+     "recall_at_1": 0.996,
+     "recall_at_10": 0.9964,
+     "qps": 637.2,
+     "p50_ms": 1.415,
+     "p95_ms": 2.451,
+     "p99_ms": 2.966
+    }
+   ]
+  },
+  {
+   "id": "faiss-ivf",
+   "label": "FAISS IndexIVFFlat",
+   "engine": "faiss",
+   "params": {
+    "nlist": 512
+   },
+   "sweep": "nprobe",
+   "build_s": 2.169726099993568,
+   "memory_bytes": 81809035,
+   "memory_note": "serialized index size",
+   "rss_delta_bytes": 0,
+   "points": [
+    {
+     "param": 1,
+     "recall_at_1": 0.412,
+     "recall_at_10": 0.4017,
+     "qps": 25400.0,
+     "p50_ms": 0.034,
+     "p95_ms": 0.07,
+     "p99_ms": 0.097
+    },
+    {
+     "param": 2,
+     "recall_at_1": 0.563,
+     "recall_at_10": 0.5399,
+     "qps": 19620.3,
+     "p50_ms": 0.043,
+     "p95_ms": 0.092,
+     "p99_ms": 0.207
+    },
+    {
+     "param": 4,
+     "recall_at_1": 0.711,
+     "recall_at_10": 0.6791,
+     "qps": 12693.7,
+     "p50_ms": 0.071,
+     "p95_ms": 0.13,
+     "p99_ms": 0.206
+    },
+    {
+     "param": 8,
+     "recall_at_1": 0.843,
+     "recall_at_10": 0.815,
+     "qps": 7099.5,
+     "p50_ms": 0.126,
+     "p95_ms": 0.247,
+     "p99_ms": 0.386
+    },
+    {
+     "param": 16,
+     "recall_at_1": 0.933,
+     "recall_at_10": 0.9026,
+     "qps": 3117.0,
+     "p50_ms": 0.268,
+     "p95_ms": 0.594,
+     "p99_ms": 0.812
+    },
+    {
+     "param": 32,
+     "recall_at_1": 0.974,
+     "recall_at_10": 0.961,
+     "qps": 1641.1,
+     "p50_ms": 0.521,
+     "p95_ms": 1.041,
+     "p99_ms": 1.49
+    },
+    {
+     "param": 64,
+     "recall_at_1": 0.987,
+     "recall_at_10": 0.9853,
+     "qps": 864.8,
+     "p50_ms": 1.003,
+     "p95_ms": 1.889,
+     "p99_ms": 2.343
+    },
+    {
+     "param": 128,
+     "recall_at_1": 0.994,
+     "recall_at_10": 0.996,
+     "qps": 449.0,
+     "p50_ms": 2.034,
+     "p95_ms": 3.479,
+     "p99_ms": 4.068
+    }
+   ]
+  }
+ ],
+ "key": "glove",
+ "environment": {
+  "hardware": {
+   "cpu": "12th Gen Intel(R) Core(TM) i7-1255U",
+   "logical_cores": 12,
+   "ram_bytes": 16874135552,
+   "os": "Windows 11",
+   "machine": "AMD64"
+  },
+  "versions": {
+   "python": "3.12.3",
+   "numpy": "2.5.4",
+   "faiss": "1.15.1",
+   "vectorforge": "0.1.0"
+  },
+  "commit": "0e658ec",
+  "command": "python bench/run_bench.py",
+  "started_at": "2026-10-26T01:03:33Z",
+  "threads": "single thread: one query at a time; FAISS pinned with omp_set_num_threads(1)"
+ },
+ "dominates_flat": true
+}

@@ -1,0 +1,132 @@
+[sift] base (200000, 128), queries (1000, 128), metric l2
+[sift] vf-flat Point(param=0, recall_at_1=1.0, recall_at_10=1.0, qps=22.8, p50_ms=43.364, p95_ms=47.339, p99_ms=52.769)
+    hnsw build 20,000/200,000 (91s)
+    hnsw build 40,000/200,000 (193s)
+    hnsw build 60,000/200,000 (314s)
+    hnsw build 80,000/200,000 (425s)
+    hnsw build 100,000/200,000 (532s)
+    hnsw build 120,000/200,000 (641s)
+    hnsw build 140,000/200,000 (751s)
+    hnsw build 160,000/200,000 (864s)
+    hnsw build 180,000/200,000 (979s)
+    hnsw build 200,000/200,000 (1092s)
+[sift] vf-hnsw ef=10 Point(param=10, recall_at_1=0.847, recall_at_10=0.7636, qps=2194.8, p50_ms=0.394, p95_ms=0.913, p99_ms=1.238)
+[sift] vf-hnsw ef=20 Point(param=20, recall_at_1=0.942, recall_at_10=0.8785, qps=1521.0, p50_ms=0.583, p95_ms=1.212, p99_ms=1.696)
+[sift] vf-hnsw ef=40 Point(param=40, recall_at_1=0.983, recall_at_10=0.954, qps=976.4, p50_ms=0.929, p95_ms=1.719, p99_ms=2.357)
+[sift] vf-hnsw ef=80 Point(param=80, recall_at_1=0.999, recall_at_10=0.9875, qps=539.3, p50_ms=1.695, p95_ms=3.001, p99_ms=4.325)
+[sift] vf-hnsw ef=120 Point(param=120, recall_at_1=1.0, recall_at_10=0.9955, qps=316.4, p50_ms=2.455, p95_ms=6.455, p99_ms=9.262)
+[sift] vf-hnsw ef=200 Point(param=200, recall_at_1=1.0, recall_at_10=0.9985, qps=273.4, p50_ms=3.521, p95_ms=5.073, p99_ms=6.373)
+[sift] vf-hnsw ef=400 Point(param=400, recall_at_1=1.0, recall_at_10=0.9999, qps=143.4, p50_ms=6.878, p95_ms=8.927, p99_ms=10.377)
+[sift] vf-ivf nprobe=1 Point(param=1, recall_at_1=0.444, recall_at_10=0.3613, qps=4694.3, p50_ms=0.19, p95_ms=0.361, p99_ms=0.546)
+[sift] vf-ivf nprobe=2 Point(param=2, recall_at_1=0.625, recall_at_10=0.5307, qps=2903.0, p50_ms=0.288, p95_ms=0.67, p99_ms=0.919)
+[sift] vf-ivf nprobe=4 Point(param=4, recall_at_1=0.787, recall_at_10=0.7045, qps=1347.9, p50_ms=0.558, p95_ms=1.435, p99_ms=2.019)
+[sift] vf-ivf nprobe=8 Point(param=8, recall_at_1=0.908, recall_at_10=0.8491, qps=528.8, p50_ms=1.799, p95_ms=2.705, p99_ms=3.392)
+[sift] vf-ivf nprobe=16 Point(param=16, recall_at_1=0.967, recall_at_10=0.9439, qps=273.2, p50_ms=3.432, p95_ms=5.36, p99_ms=7.376)
+[sift] vf-ivf nprobe=32 Point(param=32, recall_at_1=0.993, recall_at_10=0.9876, qps=148.8, p50_ms=6.557, p95_ms=8.889, p99_ms=10.143)
+[sift] vf-ivf nprobe=64 Point(param=64, recall_at_1=1.0, recall_at_10=0.999, qps=77.7, p50_ms=12.545, p95_ms=15.799, p99_ms=17.626)
+[sift] vf-ivf nprobe=128 Point(param=128, recall_at_1=1.0, recall_at_10=0.9998, qps=40.4, p50_ms=24.285, p95_ms=29.953, p99_ms=37.47)
+[sift] vf-ivf-int8 nprobe=1 Point(param=1, recall_at_1=0.44, recall_at_10=0.3612, qps=3445.1, p50_ms=0.24, p95_ms=0.563, p99_ms=0.842)
+[sift] vf-ivf-int8 nprobe=2 Point(param=2, recall_at_1=0.621, recall_at_10=0.5294, qps=1724.3, p50_ms=0.486, p95_ms=1.136, p99_ms=1.624)
+[sift] vf-ivf-int8 nprobe=4 Point(param=4, recall_at_1=0.778, recall_at_10=0.7021, qps=768.8, p50_ms=0.961, p95_ms=2.842, p99_ms=4.488)
+[sift] vf-ivf-int8 nprobe=8 Point(param=8, recall_at_1=0.898, recall_at_10=0.8438, qps=369.9, p50_ms=2.534, p95_ms=4.159, p99_ms=5.053)
+[sift] vf-ivf-int8 nprobe=16 Point(param=16, recall_at_1=0.954, recall_at_10=0.9352, qps=179.7, p50_ms=5.185, p95_ms=8.598, p99_ms=10.159)
+[sift] vf-ivf-int8 nprobe=32 Point(param=32, recall_at_1=0.979, recall_at_10=0.9766, qps=85.2, p50_ms=11.097, p95_ms=17.536, p99_ms=25.64)
+[sift] vf-ivf-int8 nprobe=64 Point(param=64, recall_at_1=0.985, recall_at_10=0.9866, qps=47.6, p50_ms=20.285, p95_ms=27.246, p99_ms=32.507)
+[sift] vf-ivf-int8 nprobe=128 Point(param=128, recall_at_1=0.985, recall_at_10=0.9873, qps=25.5, p50_ms=38.426, p95_ms=49.111, p99_ms=59.183)
+[sift] faiss-hnsw ef=10 Point(param=10, recall_at_1=0.828, recall_at_10=0.7737, qps=21504.3, p50_ms=0.043, p95_ms=0.064, p99_ms=0.092)
+[sift] faiss-hnsw ef=20 Point(param=20, recall_at_1=0.925, recall_at_10=0.8891, qps=14864.7, p50_ms=0.063, p95_ms=0.087, p99_ms=0.126)
+[sift] faiss-hnsw ef=40 Point(param=40, recall_at_1=0.979, recall_at_10=0.9595, qps=9307.2, p50_ms=0.105, p95_ms=0.138, p99_ms=0.194)
+[sift] faiss-hnsw ef=80 Point(param=80, recall_at_1=0.997, recall_at_10=0.9895, qps=4824.8, p50_ms=0.196, p95_ms=0.301, p99_ms=0.43)
+[sift] faiss-hnsw ef=120 Point(param=120, recall_at_1=0.998, recall_at_10=0.9952, qps=3304.0, p50_ms=0.292, p95_ms=0.418, p99_ms=0.553)
+[sift] faiss-hnsw ef=200 Point(param=200, recall_at_1=1.0, recall_at_10=0.9984, qps=2107.0, p50_ms=0.46, p95_ms=0.618, p99_ms=0.858)
+[sift] faiss-hnsw ef=400 Point(param=400, recall_at_1=1.0, recall_at_10=0.9997, qps=975.8, p50_ms=0.972, p95_ms=1.386, p99_ms=1.655)
+[sift] faiss-ivf nprobe=1 Point(param=1, recall_at_1=0.44, recall_at_10=0.3712, qps=32829.3, p50_ms=0.028, p95_ms=0.038, p99_ms=0.053)
+[sift] faiss-ivf nprobe=2 Point(param=2, recall_at_1=0.606, recall_at_10=0.53, qps=19731.6, p50_ms=0.047, p95_ms=0.067, p99_ms=0.093)
+[sift] faiss-ivf nprobe=4 Point(param=4, recall_at_1=0.749, recall_at_10=0.703, qps=12395.3, p50_ms=0.075, p95_ms=0.105, p99_ms=0.146)
+[sift] faiss-ivf nprobe=8 Point(param=8, recall_at_1=0.889, recall_at_10=0.8472, qps=6994.0, p50_ms=0.135, p95_ms=0.19, p99_ms=0.31)
+[sift] faiss-ivf nprobe=16 Point(param=16, recall_at_1=0.967, recall_at_10=0.9431, qps=3681.2, p50_ms=0.251, p95_ms=0.411, p99_ms=0.57)
+[sift] faiss-ivf nprobe=32 Point(param=32, recall_at_1=0.995, recall_at_10=0.9861, qps=2014.9, p50_ms=0.477, p95_ms=0.617, p99_ms=0.904)
+[sift] faiss-ivf nprobe=64 Point(param=64, recall_at_1=0.998, recall_at_10=0.9984, qps=1022.5, p50_ms=0.945, p95_ms=1.252, p99_ms=1.659)
+[sift] faiss-ivf nprobe=128 Point(param=128, recall_at_1=1.0, recall_at_10=0.9999, qps=530.4, p50_ms=1.82, p95_ms=2.269, p99_ms=2.823)
+[sift] written; HNSW dominates flat: True
+[glove] base (200000, 100), queries (1000, 100), metric cosine
+[glove] vf-flat Point(param=0, recall_at_1=1.0, recall_at_10=1.0, qps=27.9, p50_ms=35.218, p95_ms=39.225, p99_ms=44.99)
+    hnsw build 20,000/200,000 (79s)
+    hnsw build 40,000/200,000 (165s)
+    hnsw build 60,000/200,000 (294s)
+    hnsw build 80,000/200,000 (517s)
+    hnsw build 100,000/200,000 (824s)
+    hnsw build 120,000/200,000 (1070s)
+    hnsw build 140,000/200,000 (1315s)
+    hnsw build 160,000/200,000 (1652s)
+    hnsw build 180,000/200,000 (1982s)
+    hnsw build 200,000/200,000 (2319s)
+[glove] vf-hnsw ef=10 Point(param=10, recall_at_1=0.664, recall_at_10=0.599, qps=870.9, p50_ms=1.102, p95_ms=1.611, p99_ms=1.939)
+[glove] vf-hnsw ef=20 Point(param=20, recall_at_1=0.797, recall_at_10=0.7455, qps=536.6, p50_ms=1.728, p95_ms=2.883, p99_ms=3.801)
+[glove] vf-hnsw ef=40 Point(param=40, recall_at_1=0.888, recall_at_10=0.8576, qps=374.6, p50_ms=2.485, p95_ms=3.925, p99_ms=4.867)
+[glove] vf-hnsw ef=80 Point(param=80, recall_at_1=0.95, recall_at_10=0.9304, qps=230.5, p50_ms=4.108, p95_ms=6.151, p99_ms=7.191)
+[glove] vf-hnsw ef=120 Point(param=120, recall_at_1=0.971, recall_at_10=0.959, qps=167.1, p50_ms=5.711, p95_ms=8.588, p99_ms=10.505)
+[glove] vf-hnsw ef=200 Point(param=200, recall_at_1=0.983, recall_at_10=0.9773, qps=106.0, p50_ms=8.96, p95_ms=13.857, p99_ms=17.347)
+[glove] vf-hnsw ef=400 Point(param=400, recall_at_1=0.993, recall_at_10=0.9905, qps=49.7, p50_ms=19.422, p95_ms=28.888, p99_ms=35.41)
+[glove] vf-ivf nprobe=1 Point(param=1, recall_at_1=0.406, recall_at_10=0.3913, qps=1539.5, p50_ms=0.572, p95_ms=1.108, p99_ms=1.498)
+[glove] vf-ivf nprobe=2 Point(param=2, recall_at_1=0.557, recall_at_10=0.5199, qps=1020.7, p50_ms=0.859, p95_ms=1.668, p99_ms=2.429)
+[glove] vf-ivf nprobe=4 Point(param=4, recall_at_1=0.689, recall_at_10=0.6484, qps=553.5, p50_ms=1.752, p95_ms=2.788, p99_ms=3.417)
+[glove] vf-ivf nprobe=8 Point(param=8, recall_at_1=0.824, recall_at_10=0.7801, qps=315.8, p50_ms=3.059, p95_ms=4.157, p99_ms=5.159)
+[glove] vf-ivf nprobe=16 Point(param=16, recall_at_1=0.899, recall_at_10=0.8779, qps=175.1, p50_ms=5.548, p95_ms=7.37, p99_ms=8.534)
+[glove] vf-ivf nprobe=32 Point(param=32, recall_at_1=0.965, recall_at_10=0.9454, qps=86.6, p50_ms=11.184, p95_ms=15.128, p99_ms=18.554)
+[glove] vf-ivf nprobe=64 Point(param=64, recall_at_1=0.99, recall_at_10=0.9816, qps=48.5, p50_ms=19.751, p95_ms=27.042, p99_ms=29.797)
+[glove] vf-ivf nprobe=128 Point(param=128, recall_at_1=1.0, recall_at_10=0.9961, qps=27.6, p50_ms=34.247, p95_ms=48.532, p99_ms=56.32)
+[glove] vf-ivf-int8 nprobe=1 Point(param=1, recall_at_1=0.404, recall_at_10=0.3892, qps=1900.3, p50_ms=0.439, p95_ms=1.07, p99_ms=1.535)
+[glove] vf-ivf-int8 nprobe=2 Point(param=2, recall_at_1=0.552, recall_at_10=0.5171, qps=1088.3, p50_ms=0.664, p95_ms=2.005, p99_ms=3.783)
+[glove] vf-ivf-int8 nprobe=4 Point(param=4, recall_at_1=0.683, recall_at_10=0.6444, qps=686.2, p50_ms=1.197, p95_ms=2.776, p99_ms=3.521)
+[glove] vf-ivf-int8 nprobe=8 Point(param=8, recall_at_1=0.816, recall_at_10=0.7749, qps=259.7, p50_ms=3.49, p95_ms=6.369, p99_ms=8.659)
+[glove] vf-ivf-int8 nprobe=16 Point(param=16, recall_at_1=0.888, recall_at_10=0.8711, qps=128.2, p50_ms=7.425, p95_ms=11.228, p99_ms=14.706)
+[glove] vf-ivf-int8 nprobe=32 Point(param=32, recall_at_1=0.953, recall_at_10=0.9357, qps=69.3, p50_ms=13.689, p95_ms=20.448, p99_ms=27.833)
+[glove] vf-ivf-int8 nprobe=64 Point(param=64, recall_at_1=0.977, recall_at_10=0.969, qps=42.3, p50_ms=22.484, p95_ms=31.838, p99_ms=43.96)
+[glove] vf-ivf-int8 nprobe=128 Point(param=128, recall_at_1=0.987, recall_at_10=0.9813, qps=23.3, p50_ms=41.38, p95_ms=55.284, p99_ms=69.198)
+[glove] faiss-hnsw ef=10 Point(param=10, recall_at_1=0.713, recall_at_10=0.6211, qps=10829.8, p50_ms=0.083, p95_ms=0.151, p99_ms=0.221)
+[glove] faiss-hnsw ef=20 Point(param=20, recall_at_1=0.842, recall_at_10=0.7706, qps=8803.6, p50_ms=0.098, p95_ms=0.204, p99_ms=0.272)
+[glove] faiss-hnsw ef=40 Point(param=40, recall_at_1=0.928, recall_at_10=0.8795, qps=5755.2, p50_ms=0.148, p95_ms=0.308, p99_ms=0.411)
+[glove] faiss-hnsw ef=80 Point(param=80, recall_at_1=0.961, recall_at_10=0.9459, qps=3144.9, p50_ms=0.276, p95_ms=0.519, p99_ms=0.655)
+[glove] faiss-hnsw ef=120 Point(param=120, recall_at_1=0.976, recall_at_10=0.9699, qps=2103.6, p50_ms=0.425, p95_ms=0.749, p99_ms=0.946)
+[glove] faiss-hnsw ef=200 Point(param=200, recall_at_1=0.988, recall_at_10=0.9875, qps=1054.4, p50_ms=0.858, p95_ms=1.462, p99_ms=2.009)
+[glove] faiss-hnsw ef=400 Point(param=400, recall_at_1=0.996, recall_at_10=0.9964, qps=637.2, p50_ms=1.415, p95_ms=2.451, p99_ms=2.966)
+[glove] faiss-ivf nprobe=1 Point(param=1, recall_at_1=0.412, recall_at_10=0.4017, qps=25400.0, p50_ms=0.034, p95_ms=0.07, p99_ms=0.097)
+[glove] faiss-ivf nprobe=2 Point(param=2, recall_at_1=0.563, recall_at_10=0.5399, qps=19620.3, p50_ms=0.043, p95_ms=0.092, p99_ms=0.207)
+[glove] faiss-ivf nprobe=4 Point(param=4, recall_at_1=0.711, recall_at_10=0.6791, qps=12693.7, p50_ms=0.071, p95_ms=0.13, p99_ms=0.206)
+[glove] faiss-ivf nprobe=8 Point(param=8, recall_at_1=0.843, recall_at_10=0.815, qps=7099.5, p50_ms=0.126, p95_ms=0.247, p99_ms=0.386)
+[glove] faiss-ivf nprobe=16 Point(param=16, recall_at_1=0.933, recall_at_10=0.9026, qps=3117.0, p50_ms=0.268, p95_ms=0.594, p99_ms=0.812)
+[glove] faiss-ivf nprobe=32 Point(param=32, recall_at_1=0.974, recall_at_10=0.961, qps=1641.1, p50_ms=0.521, p95_ms=1.041, p99_ms=1.49)
+[glove] faiss-ivf nprobe=64 Point(param=64, recall_at_1=0.987, recall_at_10=0.9853, qps=864.8, p50_ms=1.003, p95_ms=1.889, p99_ms=2.343)
+[glove] faiss-ivf nprobe=128 Point(param=128, recall_at_1=0.994, recall_at_10=0.996, qps=449.0, p50_ms=2.034, p95_ms=3.479, p99_ms=4.068)
+[glove] written; HNSW dominates flat: True
+[
+ {
+  "dataset": "SIFT1M",
+  "dataset_key": "sift",
+  "index": "hnsw",
+  "ef_search": 40,
+  "recall_at_10": 0.954,
+  "qps": 976.4,
+  "p50_ms": 0.929,
+  "flat_qps": 22.8,
+  "speedup_vs_flat": 42.82,
+  "faiss_qps_at_same_recall": 9307.2,
+  "faiss_speedup": 9.5,
+  "n_base": 200000
+ },
+ {
+  "dataset": "GloVe-100d (6B tokens)",
+  "dataset_key": "glove",
+  "index": "hnsw",
+  "ef_search": 120,
+  "recall_at_10": 0.959,
+  "qps": 167.1,
+  "p50_ms": 5.711,
+  "flat_qps": 27.9,
+  "speedup_vs_flat": 5.99,
+  "faiss_qps_at_same_recall": 2103.6,
+  "faiss_speedup": 12.6,
+  "n_base": 200000
+ }
+]

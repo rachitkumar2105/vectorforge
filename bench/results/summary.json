@@ -1,0 +1,52 @@
+{
+ "headline": [
+  {
+   "dataset": "SIFT1M",
+   "dataset_key": "sift",
+   "index": "hnsw",
+   "ef_search": 40,
+   "recall_at_10": 0.954,
+   "qps": 976.4,
+   "p50_ms": 0.929,
+   "flat_qps": 22.8,
+   "speedup_vs_flat": 42.82,
+   "faiss_qps_at_same_recall": 9307.2,
+   "faiss_speedup": 9.5,
+   "n_base": 200000
+  },
+  {
+   "dataset": "GloVe-100d (6B tokens)",
+   "dataset_key": "glove",
+   "index": "hnsw",
+   "ef_search": 120,
+   "recall_at_10": 0.959,
+   "qps": 167.1,
+   "p50_ms": 5.711,
+   "flat_qps": 27.9,
+   "speedup_vs_flat": 5.99,
+   "faiss_qps_at_same_recall": 2103.6,
+   "faiss_speedup": 12.6,
+   "n_base": 200000
+  }
+ ],
+ "environment": {
+  "hardware": {
+   "cpu": "12th Gen Intel(R) Core(TM) i7-1255U",
+   "logical_cores": 12,
+   "ram_bytes": 16874135552,
+   "os": "Windows 11",
+   "machine": "AMD64"
+  },
+  "versions": {
+   "python": "3.12.3",
+   "numpy": "2.5.4",
+   "faiss": "1.15.1",
+   "vectorforge": "0.1.0"
+  },
+  "commit": "0e658ec",
+  "command": "python bench/run_bench.py",
+  "started_at": "2026-10-26T01:03:33Z",
+  "threads": "single thread: one query at a time; FAISS pinned with omp_set_num_threads(1)"
+ },
+ "finished_at": "2026-10-26T02:16:19Z"
+}
