@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { BodyTooLarge, readLimited } from "@/lib/body-limit";
 import { demoData } from "@/lib/demo-data";
 import { cosineTopK, embedQuery } from "@/lib/embed";
 import { TokenBucket } from "@/lib/ratelimit";
@@ -10,6 +11,8 @@ import { TokenBucket } from "@/lib/ratelimit";
 const ENGINE_URL = process.env.VECTORFORGE_ENGINE_URL;
 const DEMO_KEY = process.env.VECTORFORGE_DEMO_KEY;
 const ENGINE_TIMEOUT_MS = 2500;
+// A valid body is a 200-character query and a small integer: well under 2 KiB.
+const MAX_BODY_BYTES = 2048;
 const limiter = new TokenBucket(1, 8);
 
 export const runtime = "nodejs";
@@ -32,8 +35,9 @@ export async function POST(req: NextRequest) {
 
   let body: unknown;
   try {
-    body = await req.json();
-  } catch {
+    body = JSON.parse(await readLimited(req, MAX_BODY_BYTES));
+  } catch (err) {
+    if (err instanceof BodyTooLarge) return bad(413, "payload_too_large", "Request body is too large.");
     return bad(400, "bad_request", "Body must be JSON.");
   }
   const query = (body as { query?: unknown })?.query;
