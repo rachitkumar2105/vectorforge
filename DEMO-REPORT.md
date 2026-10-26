@@ -100,7 +100,7 @@ and the admin key appeared 0 times in the engine's logs.
   Permissions-Policy, X-Frame-Options and COOP on every page (see SECURITY.md).
 - `/privacy` and `/terms` render with a "Draft, not legal advice" notice; favicon `app/icon.svg`.
 
-### Engine status pill (live search section only) — `web/scripts/qa/pill/`, results in `docs/demo/pill/`
+### Engine status pill (live search section only): scripts in `web/scripts/qa/pill/`, results in `docs/demo/pill/`
 
 Run with `bash web/scripts/qa/run-all.sh` against the production build wired to a local engine
 container (`engine/Dockerfile`); a paused container stands in for a sleeping Render instance and a
