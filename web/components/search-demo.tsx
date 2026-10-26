@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { IconSearch } from "@/components/icons";
 import { fmtMs } from "@/lib/format";
+import { engineMonitor, useEngine } from "@/lib/use-engine";
 
 type Hit = { id: string; title: string; module: string; summary: string; distance: number };
 type Reply =
@@ -23,6 +24,10 @@ export function SearchDemo({ corpusSize }: { corpusSize: number }) {
   // Bumped per answer, so the result list re-keys on a new answer and not on every keystroke.
   const [answer, setAnswer] = useState(0);
   const reduce = useReducedMotion();
+  // Until the engine is confirmed live, answer from the snapshot: a cold start never blocks the
+  // visitor. When it comes live, the next query goes live; input and results are left alone.
+  const engine = useEngine();
+  const mode = engine.state === "live" ? "live" : "snapshot";
 
   async function run(q: string) {
     const text = q.trim();
@@ -35,7 +40,7 @@ export function SearchDemo({ corpusSize }: { corpusSize: number }) {
       const res = await fetch("/api/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: text, k: 8 }),
+        body: JSON.stringify({ query: text, k: 8, mode }),
       });
       const body = await res.json();
       setRoundTrip(performance.now() - t);
@@ -46,6 +51,8 @@ export function SearchDemo({ corpusSize }: { corpusSize: number }) {
       } else {
         setReply(body as Reply);
         setAnswer((n) => n + 1);
+        // A live query that fell back means the engine went away (free tier sleeps when idle).
+        if (mode === "live" && (body as Reply).source === "snapshot") engineMonitor.recheck();
       }
     } catch {
       setError("Network error. Check your connection and try again.");
@@ -131,20 +138,21 @@ function Status({ reply, error, busy, roundTrip }: { reply: Reply | null; error:
   if (error) return <p className="font-mono text-step--1 text-signal">{error}</p>;
   if (!reply) return <p className="font-mono text-step--1 text-ink-dim">Pick an example or type a task. Results show cosine distance.</p>;
   if (reply.source === "none") return <p className="font-mono text-step--1 text-ink-dim">None of those words are in the vocabulary. Try plainer English.</p>;
-  const rt = roundTrip !== null ? `${fmtMs(roundTrip)} ms round trip` : "";
+  const rt = roundTrip !== null ? ` · ${fmtMs(roundTrip)} ms round trip` : "";
   if (reply.source === "engine") {
     return (
-      <p className="font-mono text-step--1 text-ink-dim">
-        <span className="text-trace">Live engine</span>
-        {reply.engineMs !== null ? ` · ${fmtMs(reply.engineMs)} ms HNSW search on the server` : ""} · {rt}
+      <p className="font-mono text-step--1 text-ink-dim" data-source="engine">
+        <span className="text-trace">Live engine results</span>
+        {reply.engineMs !== null ? ` · ${fmtMs(reply.engineMs)} ms HNSW search on the server` : ""}
+        {rt}
       </p>
     );
   }
   return (
-    <p className="font-mono text-step--1 leading-relaxed">
-      <span className="text-signal">Engine {reply.reason === "engine_not_configured" ? "not connected" : "unreachable"}.</span>{" "}
+    <p className="font-mono text-step--1 leading-relaxed" data-source="snapshot">
+      <span className="text-signal">Saved snapshot results</span>
       <span className="text-ink-dim">
-        {`Served from the static snapshot: exact search over the same ${reply.corpusSize.toLocaleString("en-US")} embeddings inside the site's route handler (${fmtMs(reply.snapshotMs)} ms) · ${rt}`}
+        {` · exact search over the same ${reply.corpusSize.toLocaleString("en-US")} embeddings in the site's route handler, not the live engine (${fmtMs(reply.snapshotMs)} ms)${rt}`}
       </span>
     </p>
   );

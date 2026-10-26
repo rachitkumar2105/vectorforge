@@ -273,3 +273,43 @@ input[type="range"] {
   color: var(--color-ink);
   text-decoration-color: var(--color-trace);
 }
+
+/* Engine status pill (live search section). Transform and opacity only. */
+.engine-pill {
+  transition: opacity 400ms var(--ease-out);
+}
+.engine-pill[data-visible="false"] {
+  opacity: 0;
+  pointer-events: none;
+}
+.engine-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--color-ink-dim);
+}
+.engine-dot[data-state="waking"] {
+  background: var(--color-signal);
+}
+.engine-dot[data-state="live"] {
+  background: var(--color-trace);
+}
+.engine-dot[data-state="unavailable"] {
+  background: var(--color-rule-strong);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .engine-dot[data-state="waking"] {
+    animation: engine-pulse 1600ms cubic-bezier(0.45, 0, 0.25, 1) infinite;
+  }
+}
+@keyframes engine-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.75);
+    opacity: 0.35;
+  }
+}

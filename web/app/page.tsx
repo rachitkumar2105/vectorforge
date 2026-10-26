@@ -1,5 +1,6 @@
 import { connection } from "next/server";
 
+import { EnginePill } from "@/components/engine-pill";
 import { Hero } from "@/components/hero";
 import { LazyArchitecture, LazyBench, LazyDemo, LazyVisualizer } from "@/components/lazy-sections";
 import { Limitations } from "@/components/limitations";
@@ -9,14 +10,29 @@ import { SiteNav } from "@/components/site-nav";
 import { headlineFor, headlines, results } from "@/lib/bench";
 import demoMeta from "@/data/demo/meta.json";
 
-function SectionHead({ id, eyebrow, title, children }: { id: string; eyebrow: string; title: string; children: React.ReactNode }) {
+function SectionHead({
+  id,
+  eyebrow,
+  title,
+  aside,
+  children,
+}: {
+  id: string;
+  eyebrow: string;
+  title: string;
+  aside?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
-    <Reveal className="mb-10 max-w-[46rem] md:mb-14">
+    <Reveal className="mb-10 md:mb-14">
       <p className="eyebrow">{eyebrow}</p>
-      <h2 id={`${id}-title`} className="mt-3 text-step-3 font-semibold leading-tight tracking-tight">
-        {title}
-      </h2>
-      <div className="mt-4 text-ink-dim">{children}</div>
+      <div className="mt-3 flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-8">
+        <h2 id={`${id}-title`} className="max-w-[46rem] text-step-3 font-semibold leading-tight tracking-tight">
+          {title}
+        </h2>
+        {aside}
+      </div>
+      <div className="mt-4 max-w-[46rem] text-ink-dim">{children}</div>
     </Reveal>
   );
 }
@@ -63,10 +79,11 @@ export default async function Page() {
 
         <section id="demo" className="section" aria-labelledby="demo-title">
           <div className="container-instrument">
-            <SectionHead id="demo" eyebrow="03 · The service" title="Search the standard library by meaning">
+            <SectionHead id="demo" eyebrow="03 · The service" title="Search the standard library by meaning" aside={<EnginePill />}>
               <p>
                 Your query is embedded on the server and sent to the hosted engine through a rate-limited, read-only route.
-                The browser never holds a key. If the engine is down, the page says so and answers from a static snapshot.
+                The browser never holds a key. The engine runs on a free tier that sleeps when idle; while it wakes, or if
+                it stays asleep, answers come from a saved snapshot and are labelled as such.
               </p>
             </SectionHead>
             <LazyDemo corpusSize={corpusSize} />
