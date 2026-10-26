@@ -253,6 +253,24 @@ def tokens(text: str) -> list[str]:
     return WORD.findall(spaced.lower())
 
 
+def seed_manifest(count: int, quant: ScalarQuantizer) -> dict[str, object]:
+    """Manifest the engine reads with VECTORFORGE_SEED_DIR to rebuild the demo collection on
+    startup (vectorforge/service/seed.py). Same files the site uses for its snapshot."""
+    return {
+        "collection": {
+            "name": "demo",
+            "dim": quant.dim,
+            "metric": "cosine",
+            "index": {"type": "hnsw", "params": {"M": 16, "ef_construction": 200}},
+        },
+        "documents": "docs.json",
+        "vectors": "docs.bin",
+        "count": count,
+        "quant": {"min": quant.vmin.round(6).tolist(), "step": quant.step.round(8).tolist()},
+        "metadata_fields": ["title", "module", "summary"],
+    }
+
+
 def main() -> None:
     docs = collect()
     words = (GLOVE / "words.txt").read_text(encoding="utf-8").splitlines()
@@ -317,6 +335,9 @@ def main() -> None:
     )
     # Tiny file the page imports for the corpus size, so rendering never loads the 4 MB corpus.
     (OUT / "meta.json").write_text(json.dumps({"count": len(docs)}), encoding="utf-8", newline="\n")
+    (OUT / "seed.json").write_text(
+        json.dumps(seed_manifest(len(docs), dq), indent=1), encoding="utf-8", newline="\n"
+    )
     print(f"{len(docs)} documents, vocab {len(vocab)} words -> {OUT}")
 
 
