@@ -7,6 +7,7 @@ on:
   # Manual reruns from the Actions tab.
   workflow_dispatch:
 
+# Actions pinned to exact releases that run on Node 24 (Node 20 actions are deprecated).
 permissions:
   contents: read
 
@@ -17,8 +18,8 @@ jobs:
       run:
         working-directory: engine
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.0.0
         with:
           python-version: "3.12"
           cache: pip
@@ -44,11 +45,12 @@ jobs:
       run:
         working-directory: web
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v7.0.1
+      - uses: pnpm/action-setup@v6.1.0
         with:
-          version: 9
-      - uses: actions/setup-node@v4
+          # pnpm version comes from "packageManager" in web/package.json (one source of truth).
+          package_json_file: web/package.json
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version: 24
           cache: pnpm
@@ -63,7 +65,7 @@ jobs:
   secrets:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
       - name: gitleaks (full history)
