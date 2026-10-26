@@ -45,7 +45,11 @@ def test_reupsert_replaces_vector_and_metadata(coll: Collection) -> None:
     assert coll.count == 20
     out = coll.search(vec(1000), k=1, ef_search=64, nprobe=4)
     assert out.hits[0].id == "v3" and out.hits[0].metadata == {"new": True}
-    assert "v3" not in [h.id for h in coll.search(vec(3), k=20, ef_search=64, nprobe=4).hits[1:]]
+    # The old vector for v3 is tombstoned: v3 is no longer the nearest neighbour of vec(3), and
+    # a k=20 search over the 20 live ids returns each id exactly once (no stale duplicate).
+    assert coll.search(vec(3), k=1, ef_search=64, nprobe=4).hits[0].id != "v3"
+    ids = [h.id for h in coll.search(vec(3), k=20, ef_search=64, nprobe=4).hits]
+    assert len(ids) == len(set(ids))
 
 
 def test_delete_tombstones(coll: Collection) -> None:

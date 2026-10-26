@@ -47,3 +47,11 @@ The spec lists `/vc-*` commands as the phase spine and `design-taste-frontend` a
 `design-taste-frontend` is not installed on this machine. Docs were written directly against the
 spec's own requirements; the visual direction is written down in `docs/DESIGN.md` from the spec's
 Phase 8 brief.
+
+## D7. Corrected test: `test_reupsert_replaces_vector_and_metadata`
+
+The original assertion said `v3` must not appear in `hits[1:]` of a k=20 search over a
+20-vector collection. That is wrong: after the re-upsert, `v3` is still a live id (with a new
+vector), so a k=20 search over 20 live ids must include it. The intended property is that the
+*old* vector is gone. The test now checks that `v3` is not the nearest neighbour of its old
+vector and that no id appears twice. Changed in its own commit, before any engine fix.
