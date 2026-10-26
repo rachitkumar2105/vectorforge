@@ -155,8 +155,13 @@ def test_appends_after_recovery_are_readable(tmp_path: Path) -> None:
 def test_unicode_ids_and_metadata_survive(tmp_path: Path) -> None:
     path = tmp_path / "wal.log"
     wal = WriteAheadLog(path)
-    rec = WalRecord(lsn=1, op=Op.UPSERT, ident="doc:é", vector=np.ones(2, np.float32),
-                    metadata={"title": "naïve café"})
+    rec = WalRecord(
+        lsn=1,
+        op=Op.UPSERT,
+        ident="doc:é",
+        vector=np.ones(2, np.float32),
+        metadata={"title": "naïve café"},
+    )
     wal.append([rec])
     wal.close()
     records, _ = WriteAheadLog.replay(path)
@@ -174,7 +179,9 @@ def test_atomic_write_replaces_and_leaves_no_temp_file(tmp_path: Path) -> None:
     assert [p.name for p in tmp_path.iterdir()] == ["manifest.json"]
 
 
-def test_interrupted_write_keeps_previous_version(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_interrupted_write_keeps_previous_version(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     target = tmp_path / "manifest.json"
     atomic_write_json(target, {"v": 1})
 

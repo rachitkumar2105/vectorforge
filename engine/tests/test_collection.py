@@ -21,8 +21,13 @@ def items(start: int, stop: int, dim: int = 8) -> list[UpsertItem]:
 def coll(request: pytest.FixtureRequest, tmp_path: Path) -> Collection:
     params = {"hnsw": {"M": 8, "ef_construction": 64}, "ivf": {"nlist": 4}, "flat": {}}
     c = Collection.create(
-        tmp_path, "c1", dim=8, metric="l2", index_type=request.param,
-        index_params=params[request.param], checkpoint_every=50,
+        tmp_path,
+        "c1",
+        dim=8,
+        metric="l2",
+        index_type=request.param,
+        index_params=params[request.param],
+        checkpoint_every=50,
     )
     yield c
     c.close()
@@ -105,8 +110,15 @@ def test_close_and_reopen_returns_identical_results(coll: Collection) -> None:
 
 
 def test_reopen_without_clean_close_replays_wal(tmp_path: Path) -> None:
-    c = Collection.create(tmp_path, "w", dim=8, metric="cosine", index_type="hnsw",
-                          index_params={"M": 8}, checkpoint_every=1000)
+    c = Collection.create(
+        tmp_path,
+        "w",
+        dim=8,
+        metric="cosine",
+        index_type="hnsw",
+        index_params={"M": 8},
+        checkpoint_every=1000,
+    )
     c.upsert(items(0, 40))
     c.delete("v1")
     # No close(): nothing was checkpointed, so everything must come back from the WAL.

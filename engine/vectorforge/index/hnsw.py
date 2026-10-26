@@ -407,9 +407,12 @@ class HNSWIndex(Index):
         )
         return s
 
-    def save(self, path: Path) -> None:
+    def save(self, path: Path, include_vectors: bool = True) -> None:
         """Graph as CSR-style int32 arrays: for each node, for each of its layers, the count
-        followed by the neighbour labels. Compact, and loads without pickling."""
+        followed by the neighbour labels. Compact, and loads without pickling.
+
+        A collection passes ``include_vectors=False``: its segments already hold the vectors,
+        and a second copy would double checkpoint size for nothing."""
         flat: list[int] = []
         offsets = np.zeros(len(self) + 1, dtype=np.int64)
         for node, layers in enumerate(self._links):
@@ -431,7 +434,8 @@ class HNSWIndex(Index):
                 "rng_state": self._rng.bit_generator.state,
             },
         )
-        np.save(path / "vectors.npy", np.asarray(self._vectors.view(), dtype=np.float32))
+        if include_vectors:
+            np.save(path / "vectors.npy", np.asarray(self._vectors.view(), dtype=np.float32))
         np.save(path / "levels.npy", np.array(self._levels, dtype=np.int16))
         np.save(path / "links.npy", np.array(flat, dtype=np.int32))
         np.save(path / "offsets.npy", offsets)
@@ -455,11 +459,15 @@ class HNSWIndex(Index):
         levels = np.load(path / "levels.npy").tolist()
         flat = np.load(path / "links.npy").tolist()
         offsets = np.load(path / "offsets.npy").tolist()
-        vecs = vectors if vectors is not None else np.load(path / "vectors.npy")
-        if len(vecs) < len(levels):
-            raise ValueError("vector store is shorter than the saved graph")
+        if vectors is not None:
+            # Raw vectors from segments: apply the same preparation as add() (cosine -> unit).
+            if len(vectors) < len(levels):
+                raise ValueError("vector store is shorter than the saved graph")
+            vecs = index._prepare(np.asarray(vectors[: len(levels)], dtype=np.float32))
+        else:
+            vecs = np.load(path / "vectors.npy")
         if len(levels):
-            index._vectors.append(np.asarray(vecs[: len(levels)], dtype=np.float32))
+            index._vectors.append(np.asarray(vecs, dtype=np.float32))
         index._levels = levels
         for node, level in enumerate(levels):
             pos = offsets[node]
