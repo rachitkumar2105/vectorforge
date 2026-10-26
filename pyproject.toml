@@ -1,0 +1,23 @@
+# Repo-wide formatter and linter settings, shared by engine/ and bench/.
+# The engine package itself is defined in engine/pyproject.toml.
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "N", "SIM"]
+# S101: asserts guard internal invariants. SIM108: if/else reads better with a comment per branch.
+ignore = ["S101", "SIM108"]
+
+[tool.ruff.lint.per-file-ignores]
+"engine/tests/**" = ["S", "N802", "N803", "N806"]
+"bench/**" = ["S311", "N803", "N806"]
+# M is the HNSW paper's own symbol; renaming it would make the code harder to map to the paper.
+"engine/vectorforge/index/hnsw.py" = ["N803"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["vectorforge"]

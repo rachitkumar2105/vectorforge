@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import numpy as np
 import numpy.typing as npt
 
@@ -21,7 +23,7 @@ class GrowableMatrix:
     def __len__(self) -> int:
         return self._n
 
-    def append(self, rows: npt.NDArray[np.generic]) -> int:
+    def append(self, rows: npt.NDArray[Any]) -> int:
         """Append rows; returns the index of the first appended row."""
         start = self._n
         need = self._n + rows.shape[0]
@@ -34,11 +36,11 @@ class GrowableMatrix:
         self._n = need
         return start
 
-    def view(self) -> npt.NDArray[np.generic]:
+    def view(self) -> npt.NDArray[Any]:
         return self._buf[: self._n]
 
-    def row(self, i: int) -> npt.NDArray[np.generic]:
-        row: npt.NDArray[np.generic] = self._buf[i]
+    def row(self, i: int) -> npt.NDArray[Any]:
+        row: npt.NDArray[Any] = self._buf[i]
         return row
 
     def nbytes(self) -> int:

@@ -51,15 +51,7 @@ skip_covered = false
 exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "raise NotImplementedError", "@abstractmethod"]
 
 [tool.ruff]
-line-length = 100
-target-version = "py312"
-
-[tool.ruff.lint]
-select = ["E", "F", "W", "I", "B", "UP", "S", "N", "SIM"]
-ignore = ["S101", "SIM108"]  # asserts guard internal invariants; if/else reads better with comments
-
-[tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S", "N802", "N806"]
+extend = "../pyproject.toml"
 
 [tool.black]
 line-length = 100

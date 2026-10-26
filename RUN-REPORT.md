@@ -25,3 +25,30 @@ runs: Windows 11, Python 3.12.3 in `~/.venvs/vectorforge`, 12 logical cores, 15.
 
 ### Not verified / assumed
 - Nothing assumed for this phase.
+
+## Phase 2: HNSW
+
+### Verified
+- `cd engine && pytest --cov=vectorforge -q`: `49 passed in 117.03s`, total coverage 92.88%
+  (hnsw.py 93%).
+- Graph invariants on 5000 inserts (M=8, ef_construction=64): bidirectional links, degree caps
+  (M_max0 = 2M on layer 0, M above), layer 0 holds every id, entry point at max level, nested
+  layers, layer 0 connected from the entry point. Tests in `engine/tests/test_hnsw.py`.
+- Gate numbers from `python bench/scripts/hnsw_gate.py` (10k x 24-d Gaussian, 200 queries,
+  M=16, ef_construction=200, seed 3):
+
+  | ef_search | recall@10 heuristic | recall@10 simple top-M |
+  | --- | --- | --- |
+  | 10 | 0.6700 | 0.6690 |
+  | 50 | 0.9770 | 0.9515 |
+  | 100 | **0.9970** | 0.9925 |
+  | 200 | 0.9995 | 0.9985 |
+
+  Build time: heuristic 43.0 s, simple 28.5 s (pure Python, single thread).
+- Recall is monotonic in ef_search; determinism under a fixed seed; save/load gives identical
+  results and identical levels for later inserts (RNG state persisted).
+
+### Not verified / assumed
+- The heuristic vs simple gap is small on isotropic Gaussian data. The paper's claim that the
+  heuristic matters most on clustered data is not yet measured here; the Phase 7 benchmark on
+  SIFT/GloVe is where that shows up.

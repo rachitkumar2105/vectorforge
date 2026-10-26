@@ -102,14 +102,18 @@ def test_level_distribution_matches_ml() -> None:
 
 
 @pytest.mark.slow
-def test_recall_at_10_above_095_at_ef_100(recall_10k: tuple[HNSWIndex, np.ndarray, np.ndarray]) -> None:
+def test_recall_at_10_above_095_at_ef_100(
+    recall_10k: tuple[HNSWIndex, np.ndarray, np.ndarray],
+) -> None:
     index, queries, truth = recall_10k
     found = np.stack([index.search(q, k=10, ef_search=100).labels for q in queries])
     assert recall_at_k(found, truth, 10) > 0.95
 
 
 @pytest.mark.slow
-def test_recall_rises_monotonically_with_ef(recall_10k: tuple[HNSWIndex, np.ndarray, np.ndarray]) -> None:
+def test_recall_rises_monotonically_with_ef(
+    recall_10k: tuple[HNSWIndex, np.ndarray, np.ndarray],
+) -> None:
     index, queries, truth = recall_10k
     recalls = []
     for ef in (10, 50, 100, 200):
@@ -206,7 +210,9 @@ def test_allow_predicate_applies_during_traversal() -> None:
 def test_k_larger_than_index() -> None:
     index = HNSWIndex(dim=2, seed=0)
     index.add(gaussian(5, 2, seed=0))
-    assert sorted(index.search(np.zeros(2, dtype=np.float32), k=50).labels.tolist()) == list(range(5))
+    assert sorted(index.search(np.zeros(2, dtype=np.float32), k=50).labels.tolist()) == list(
+        range(5)
+    )
 
 
 def test_dimension_mismatch() -> None:
