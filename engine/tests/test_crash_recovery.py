@@ -18,8 +18,7 @@ from vectorforge.collection import Collection
 
 DIM = 16
 
-WRITER = textwrap.dedent(
-    """
+WRITER = textwrap.dedent("""
     import sys
     from pathlib import Path
     import numpy as np
@@ -61,8 +60,7 @@ WRITER = textwrap.dedent(
         # never sees an ACK without also knowing about that batch's delete.
         print("ACK", i + 2, deleted, flush=True)
         i += 3
-    """
-).format(dim=DIM)
+    """).format(dim=DIM)
 
 
 def expected(j: int) -> np.ndarray:
