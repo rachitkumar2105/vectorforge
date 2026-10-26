@@ -20,6 +20,8 @@ export function SearchDemo({ corpusSize }: { corpusSize: number }) {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [roundTrip, setRoundTrip] = useState<number | null>(null);
+  // Bumped per answer, so the result list re-keys on a new answer and not on every keystroke.
+  const [answer, setAnswer] = useState(0);
   const reduce = useReducedMotion();
 
   async function run(q: string) {
@@ -43,6 +45,7 @@ export function SearchDemo({ corpusSize }: { corpusSize: number }) {
         setReply(null);
       } else {
         setReply(body as Reply);
+        setAnswer((n) => n + 1);
       }
     } catch {
       setError("Network error. Check your connection and try again.");
@@ -92,14 +95,20 @@ export function SearchDemo({ corpusSize }: { corpusSize: number }) {
 
       <div className="panel min-h-[22rem] p-4 md:p-5" aria-live="polite" aria-busy={busy}>
         <Status reply={reply} error={error} busy={busy} roundTrip={roundTrip} />
-        <ol className="mt-4 flex flex-col">
-          <AnimatePresence initial={false} mode="popLayout">
+        {/* One keyed list per answer: the old list fades out, then the new one steps in. mode="wait"
+            needs no injected <style> element, unlike "popLayout", which the nonce CSP would block. */}
+        <AnimatePresence initial={false} mode="wait">
+          <motion.ol
+            key={answer}
+            className="mt-4 flex flex-col"
+            initial={false}
+            exit={reduce ? undefined : { opacity: 0, transition: { duration: 0.15 } }}
+          >
             {reply?.results.map((h, i) => (
               <motion.li
-                key={`${query}-${h.id}`}
+                key={h.id}
                 initial={reduce ? false : { opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
                 transition={{ duration: 0.3, delay: reduce ? 0 : i * 0.035, ease: [0.22, 1, 0.36, 1] }}
                 className="border-t border-rule py-3 first:border-t-0"
               >
@@ -110,8 +119,8 @@ export function SearchDemo({ corpusSize }: { corpusSize: number }) {
                 <p className="mt-1 text-step--1 leading-relaxed text-ink">{h.summary}</p>
               </motion.li>
             ))}
-          </AnimatePresence>
-        </ol>
+          </motion.ol>
+        </AnimatePresence>
       </div>
     </div>
   );
