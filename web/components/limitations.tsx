@@ -10,6 +10,18 @@ export function Limitations({ headline }: { headline: Headline }) {
         : "Python pays interpreter overhead on every graph hop; FAISS runs SIMD kernels over contiguous C++ memory.",
     },
     { title: "One machine, one process.", body: "No sharding, no replication, no failover. If the host dies, the service is down until it restarts and replays its log." },
+    {
+      title: "The hosted engine runs on a free tier that sleeps.",
+      body: "It spins down after 15 minutes without traffic, and the first request after that waits for a cold start of about a minute. The search section shows this while it happens and answers from a saved snapshot meanwhile.",
+    },
+    {
+      title: "The hosted demo is small, by design.",
+      body: "The free instance has 512 MB of RAM, so it serves a 3,178-document corpus. The benchmark numbers on this page come from local runs on 200,000 vectors per dataset and are served from committed results, not from the hosted engine.",
+    },
+    {
+      title: "The hosted engine has no persistent disk.",
+      body: "Anything written to it is lost on restart. Its demo index is rebuilt from a committed seed corpus when the image is built, so every restart comes back with the same demo; nothing else survives.",
+    },
     { title: "One lock per collection.", body: "Writes and searches on a collection are serialised. Under the GIL finer locking buys little, but it does mean a long batch insert blocks searches on that collection." },
     { title: "Everything must fit in memory.", body: "Indexes live in RAM; segments are memory-mapped for durability, not for out-of-core search. There is no disk-resident graph." },
     { title: "Deletes are tombstones, and nothing compacts them.", body: "Deleted vectors still occupy the graph and still cost hops. A periodic rebuild would reclaim them; it is not implemented." },

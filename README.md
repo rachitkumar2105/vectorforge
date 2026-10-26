@@ -54,6 +54,24 @@ pnpm dev                # copies bench/results into web/data/bench, then starts 
 Server-only environment for the demo route: `VECTORFORGE_ENGINE_URL`, `VECTORFORGE_DEMO_KEY`.
 Without them the demo answers from the static snapshot and says so.
 
+## Hosting (free tiers) and their limits
+
+- **Engine:** Render free web service, from `render.yaml` and `engine/Dockerfile`.
+  - **512 MB RAM.** The hosted demo corpus is 3,178 vectors (Python standard-library docstrings).
+    Full benchmark numbers come from local runs and are served as committed JSON from
+    `bench/results`, never from the hosted engine.
+  - **No persistent disk.** The demo index is rebuilt from the committed seed corpus
+    (`web/data/demo/seed.json`) when the image is built and baked into it; every restart starts
+    from that snapshot. Measured at 0.1 CPU / 512 MB: ready in 37 s using 53 MB. Rebuilding the
+    graph on boot instead took more than 10 minutes there, so it is not done at startup. Anything
+    written to the hosted engine is lost on restart.
+  - **Sleeps after 15 minutes idle.** The next request waits for a cold start of about a minute.
+    The site's search section shows a status pill (checking, waking, live, unavailable) and
+    answers from a saved snapshot until the engine is live.
+- **Site:** Vercel Hobby. Everything except live search (hero, visualizer, benchmark charts,
+  architecture) is static or client-side and works with the engine completely down.
+- Deployment steps and the exact environment variables: `docs/DEPLOY.md`.
+
 ## Layout
 
 ```
