@@ -173,3 +173,9 @@ runs: Windows 11, Python 3.12.3 in `~/.venvs/vectorforge`, 12 logical cores, 15.
 ## Phase 10: Final audit
 
 - `FINAL-AUDIT.md` and `docs/INTERVIEW.md` written.
+
+## CI on GitHub
+
+### Verified
+- GitHub Actions run #4 on `main` at afb4fc9 (https://github.com/rachitkumar2105/vectorforge/actions/runs/40304566096): **success**. engine 3m39s (ANN import guard, ruff, black, mypy, pytest `199 passed`, coverage 95.19%, pip-audit); web 35s (lint, typecheck, `node --test` 20 tests, build, `pnpm audit --prod`); secrets 16s (gitleaks, full history). Runs #1 and #2 failed on an invalid workflow expression (`hashFiles` in a job-level `if`), fixed in afb4fc9.
+- Warnings only: actions pinned at v4/v5 run on Node 20, which GitHub is deprecating; the `ubuntu-latest` label is migrating to Ubuntu 26.

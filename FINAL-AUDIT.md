@@ -8,12 +8,12 @@ author's approval and accounts. This audit does not claim the system is secure.
 
 | Phase | Gate | Status | Evidence |
 | --- | --- | --- | --- |
-| 0 Foundation | CI green on an empty-but-valid repo | Passed locally | CI steps run locally and in a Linux container (ruff, black, mypy, pytest, coverage gate). GitHub Actions has not run: no remote. |
+| 0 Foundation | CI green on an empty-but-valid repo | Passed | GitHub Actions green on `main` (run #4); see Coverage below. |
 | 1 Distance + flat | flat recall 1.0 vs itself; tests pass | Passed | `test_flat_recall_against_itself_is_exactly_one`; flat matches published SIFT ground truth exactly on 20 queries. |
 | 2 HNSW | invariants hold; recall@10 > 0.95 at ef_search=100 on 10k | Passed | `python bench/scripts/hnsw_gate.py`: **0.9970**; invariants tested on 5,000 inserts. |
 | 3 IVF + int8 | recall rises with nprobe; 1.0 at nprobe == nlist; memory measured | Passed | `python bench/scripts/ivf_gate.py`: recall 1.0 at full probe; int8 storage **4.00x** smaller, recall@10 0.9645 at full probe. |
 | 4 Persistence | crash recovery passes repeatedly (10 times) | Passed | crash module run 10 times: `10 passed` each time (100 hard-kill/reopen runs); 4/30 kills left torn WAL tails, all recovered. Also passes under Linux SIGKILL in the container run. |
-| 5 Query service | coverage > 85% on engine; CI green; push | Passed except push | `pytest --cov=vectorforge`: **199 passed, 95.19%**. Push not done (needs approval). |
+| 5 Query service | coverage > 85% on engine; CI green; push | Passed | `pytest --cov=vectorforge`: **199 passed, 95.19%**, locally and in GitHub Actions; pushed to github.com/rachitkumar2105/vectorforge. |
 | 6 Security | `/security-audit` run and report committed; FAILs fixed or accepted | Passed | `SECURITY.md`; findings 1, 3, 4, 5, 6, 9 fixed in separate commits; S6 accepted in writing (DECISIONS D14). |
 | 7 Benchmark | results from a real run; HNSW dominates flat at equal recall | Passed | `python bench/run_bench.py` (log `bench/results/run.log`); `dominates_flat: true` on both datasets. |
 | 8 Site | nine widths, reduced motion, Tab walk, console clean, Lighthouse >= 90 mobile | Passed with one re-measurement pending | `DEMO-REPORT.md`. Lighthouse 93 to 97 performance, 100 accessibility over five runs on the pre-audit-fix build; the post-fix rerun was invalidated by unrelated CPU load and is pending. |
@@ -39,6 +39,8 @@ gitleaks v8.24.3 over the full history: 39 commits, no leaks. `pip-audit` and `p
 known vulnerabilities.
 
 ## Coverage
+
+- CI: GitHub Actions run #4 on `main` at afb4fc9 (https://github.com/rachitkumar2105/vectorforge/actions/runs/40304566096): **success**. engine 3m39s (ANN import guard, ruff, black, mypy, pytest `199 passed`, coverage 95.19%, pip-audit); web 35s (lint, typecheck, `node --test` 20 tests, build, `pnpm audit --prod`); secrets 16s (gitleaks, full history). Runs #1 and #2 failed on an invalid workflow expression (`hashFiles` in a job-level `if`), fixed in afb4fc9.
 
 - Engine: `cd engine && pytest --cov=vectorforge` -> **199 passed, total coverage 95.19%** (gate 85%).
   Same suite in a `python:3.12-slim` Linux container: 192 passed, 95.14% (before the 7 audit
@@ -101,7 +103,6 @@ repository content does not. No dataset, index or `.env` file has ever been comm
 
 - **Deployment (Phase 9):** no Fly/Railway app, no Vercel project, no custom domain, no uptime
   check, no preview deployments, no HTTPS check, no `fly volumes` snapshot or restore drill.
-- **GitHub Actions:** never run (no remote). Its steps pass locally and in a Linux container.
 - **Lighthouse on the final build:** pending a rerun on an idle machine (see DEMO-REPORT).
 - **60 fps:** not profiled with a frame trace.
 - **Other browsers and real phones:** Chrome via Playwright only.
@@ -122,7 +123,7 @@ encrypted by the application.
 
 ## Open items before calling it launched
 
-1. Approve merging `build/v1` and creating the GitHub remote; push; confirm CI green.
+1. Done: repository created, `build/v1` merged into `main`, pushed, CI green (run #4).
 2. Deploy the engine (Fly config in `engine/fly.toml`), set `VECTORFORGE_ADMIN_KEY` and
    `VECTORFORGE_DEMO_KEY` as platform secrets, seed the demo with `bench/demo/seed_engine.py`.
 3. Deploy the site to Vercel with `VECTORFORGE_ENGINE_URL` and `VECTORFORGE_DEMO_KEY` as
