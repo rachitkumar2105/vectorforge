@@ -1,5 +1,6 @@
 // Scroll the whole page like a reader and confirm every reveal fired (none left hidden).
 async (page) => {
+  await page.bringToFront(); // background tabs get no animation frames
   await page.emulateMedia({ reducedMotion: "no-preference" }); // sessions keep emulation between runs
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("http://localhost:3000/", { waitUntil: "networkidle" });

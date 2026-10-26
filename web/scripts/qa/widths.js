@@ -1,6 +1,7 @@
 // playwright-cli run-code --filename=web/scripts/qa/widths.js   (dev or prod server on :3000)
 // Screenshots at the nine widths the spec requires, plus a horizontal-overflow check per width.
 async (page) => {
+  await page.bringToFront(); // background tabs get no animation frames
   await page.emulateMedia({ reducedMotion: "no-preference" }); // sessions keep emulation between runs
   const widths = [375, 414, 768, 1024, 1280, 1440, 1920, 2560, 3440];
   const out = [];

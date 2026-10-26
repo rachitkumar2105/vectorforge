@@ -1,5 +1,6 @@
 // Full keyboard Tab walk: every stop, its accessible name, and whether a focus outline is drawn.
 async (page) => {
+  await page.bringToFront(); // background tabs get no animation frames
   await page.emulateMedia({ reducedMotion: "no-preference" }); // sessions keep emulation between runs
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("http://localhost:3000/", { waitUntil: "networkidle" });

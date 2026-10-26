@@ -1,5 +1,6 @@
 // Screenshot each section at desktop and phone widths for design review.
 async (page) => {
+  await page.bringToFront(); // background tabs get no animation frames
   await page.emulateMedia({ reducedMotion: "no-preference" }); // sessions keep emulation between runs
   const out = [];
   for (const w of [1440, 375]) {

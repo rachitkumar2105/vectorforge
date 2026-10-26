@@ -5,6 +5,7 @@ async (page) => {
   const out = {};
   for (const [w, h] of [[1440, 900], [375, 812]]) {
     const p = await page.context().newPage();
+    await p.bringToFront(); // background tabs get no animation frames
     await p.emulateMedia({ reducedMotion: "no-preference" });
     await p.setViewportSize({ width: w, height: h });
     const errors = [];

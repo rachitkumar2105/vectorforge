@@ -1,5 +1,6 @@
 // Load, interact with every section, and report console errors/warnings and CSP violations.
 async (page) => {
+  await page.bringToFront(); // background tabs get no animation frames
   await page.emulateMedia({ reducedMotion: "no-preference" }); // sessions keep emulation between runs
   const msgs = [];
   page.on("console", (m) => { if (["error", "warning"].includes(m.type())) msgs.push(`${m.type()}: ${m.text()}`); });
@@ -18,7 +19,7 @@ async (page) => {
   await page.locator("#demo").scrollIntoViewIfNeeded();
   await page.getByRole("button", { name: "compress data" }).click();
   await page.waitForTimeout(1500);
-  const status = await page.locator("#demo [aria-live]").innerText();
+  const status = await page.locator("#demo .panel[aria-live]").innerText();
   await page.locator("#architecture").scrollIntoViewIfNeeded();
   await page.mouse.wheel(0, 3000);
   await page.waitForTimeout(800);

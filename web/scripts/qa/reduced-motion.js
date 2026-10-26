@@ -1,5 +1,6 @@
 // Reduced motion: decorative animation off, visualizer manual (no Play button, Step present).
 async (page) => {
+  await page.bringToFront(); // background tabs get no animation frames
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("http://localhost:3000/", { waitUntil: "networkidle" });

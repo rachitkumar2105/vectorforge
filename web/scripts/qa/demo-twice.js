@@ -2,6 +2,7 @@
 // Reports console errors and CSP violations, which a single search does not exercise.
 async (page) => {
   const p = await page.context().newPage();
+    await p.bringToFront(); // background tabs get no animation frames
   await p.emulateMedia({ reducedMotion: "no-preference" });
   const errors = [];
   p.on("console", (m) => { if (["error", "warning"].includes(m.type())) errors.push(m.text().slice(0, 90)); });
