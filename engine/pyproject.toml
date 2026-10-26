@@ -7,7 +7,7 @@ name = "vectorforge"
 version = "0.1.0"
 description = "A vector database written from first principles: HNSW, IVF, int8 quantization, WAL, FastAPI service."
 readme = "../README.md"
-requires-python = ">=3.11,<3.14"
+requires-python = ">=3.12,<3.14"
 license = { text = "MIT" }
 authors = [{ name = "Rachit Kumar Singh" }]
 dependencies = [
@@ -52,21 +52,21 @@ exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "raise NotImplementedE
 
 [tool.ruff]
 line-length = 100
-target-version = "py311"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "S", "N", "SIM"]
-ignore = ["S101"]  # assert is fine in tests and for internal invariants
+ignore = ["S101", "SIM108"]  # asserts guard internal invariants; if/else reads better with comments
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S", "N802", "N806"]
 
 [tool.black]
 line-length = 100
-target-version = ["py311"]
+target-version = ["py312"]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 strict = true
 packages = ["vectorforge"]
 plugins = ["pydantic.mypy"]
