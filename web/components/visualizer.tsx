@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "motion/react";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
 import { IconEnd, IconPause, IconPlay, IconReset, IconShuffle, IconStep } from "@/components/icons";
@@ -165,7 +164,7 @@ function Stage({ wide, reduced }: { wide: boolean; reduced: boolean }) {
         onKeyDown={onKey}
       >
         {wide ? (
-          <PerspectiveStage graph={graph} frame={frame} query={query} truth={done ? truth : []} reduced={reduced} onPlace={place} />
+          <PerspectiveStage graph={graph} frame={frame} query={query} truth={done ? truth : []} onPlace={place} />
         ) : (
           <StackedStage graph={graph} frame={frame} query={query} truth={done ? truth : []} onPlace={place} />
         )}
@@ -293,7 +292,7 @@ const SHEAR = 190;
 const LEFT = 110;
 const GAP = 34;
 
-function PerspectiveStage({ graph, frame, query, truth, reduced, onPlace }: StageProps & { reduced: boolean }) {
+function PerspectiveStage({ graph, frame, query, truth, onPlace }: StageProps) {
   const layers = Array.from({ length: graph.maxLevel + 1 }, (_, i) => i);
   const VH = 40 + layers.length * (PH + GAP);
   const base = (layer: number) => VH - 30 - layer * (PH + GAP); // near edge of each plane
@@ -338,7 +337,7 @@ function PerspectiveStage({ graph, frame, query, truth, reduced, onPlace }: Stag
             </text>
             <LayerEdges graph={graph} layer={layer} proj={proj} />
             <Hops frame={frame} layer={layer} graph={graph} proj={proj} />
-            <LayerNodes graph={graph} frame={frame} layer={layer} truth={truth} proj={proj} reduced={reduced} />
+            <LayerNodes graph={graph} frame={frame} layer={layer} truth={truth} proj={proj} />
             <Crosshair at={proj(query, layer)} bright={layer === 0} />
           </g>
         );
@@ -388,7 +387,7 @@ function Hops({ frame, layer, graph, proj }: { frame: Frame; layer: number; grap
   );
 }
 
-function LayerNodes({ graph, frame, layer, truth, proj, reduced }: { graph: Graph; frame: Frame; layer: number; truth: number[]; proj: Proj; reduced: boolean }) {
+function LayerNodes({ graph, frame, layer, truth, proj }: { graph: Graph; frame: Frame; layer: number; truth: number[]; proj: Proj }) {
   const r = layer === 0 ? 3.2 : 4;
   return (
     <g>
@@ -406,17 +405,16 @@ function LayerNodes({ graph, frame, layer, truth, proj, reduced }: { graph: Grap
         );
       })}
       {frame.current !== null && frame.layer === layer ? (
-        <motion.circle
+        // Re-keyed per expansion so the CSS pop replays on every hop (static under reduced motion).
+        <circle
           key={`${layer}-${frame.current}`}
+          className="ring-pop"
           cx={proj(graph.points[frame.current]!, layer).x}
           cy={proj(graph.points[frame.current]!, layer).y}
           r={r + 7}
           fill="none"
           stroke="#35e0c2"
           strokeWidth="1.5"
-          initial={reduced ? false : { scale: 0.4, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
         />
       ) : null}
     </g>
@@ -465,7 +463,7 @@ function StackedLayer({ graph, frame, query, truth, layer, onPlace }: Omit<Stage
       <svg ref={ref} viewBox={`0 0 ${S} ${S}`} className={`block h-auto w-full ${onPlace ? "cursor-crosshair" : ""}`} onClick={click} aria-hidden={layer !== 0}>
         <LayerEdges graph={graph} layer={layer} proj={proj} />
         <Hops frame={frame} layer={layer} graph={graph} proj={proj} />
-        <LayerNodes graph={graph} frame={frame} layer={layer} truth={truth} proj={proj} reduced />
+        <LayerNodes graph={graph} frame={frame} layer={layer} truth={truth} proj={proj} />
         <Crosshair at={proj(query, layer)} bright={layer === 0} />
       </svg>
     </figure>

@@ -152,3 +152,30 @@ Not deleted, per the author's instruction. Candidates for removal:
 | `FlatIndex.search_labels` | `engine/vectorforge/index/flat.py:72` | the collection's selective-filter path uses `Collection._exact` |
 | `Index.is_deleted` | `engine/vectorforge/index/base.py:93` | no caller |
 | `fmtRecall` | `web/lib/format.ts:9` | no caller |
+
+## D16. Free hosting: Render (engine) and Vercel Hobby (site), demo index baked at build time
+
+The author moved deployment to free tiers only: Render's free web service for the engine
+(512 MB RAM, no persistent disk, sleeps after 15 minutes idle) and Vercel Hobby for the site.
+Fly.io is no longer the target; `engine/fly.toml` is kept only as a documented alternative.
+
+"Rebuild the index on startup from a committed seed corpus" was measured under Render's limits
+with `docker run --cpus=0.1 --memory=512m`:
+- rebuilding the 3,178-vector HNSW graph on boot: still not ready after 10 minutes, stopped;
+- loading a checkpoint of the same index built from the same seed: ready in 37 s, 53 MB RSS.
+
+So the rebuild happens during the image build (on Render's build machine, from
+`web/data/demo/seed.json` + `docs.bin`), and every start loads that snapshot. Startup seeding
+(`VECTORFORGE_SEED_DIR`) remains as the fallback when no snapshot exists. Writes to the hosted
+engine are ephemeral; the README and the site's limitations section say so.
+
+## D17. motion removed; CSS keyframes for the two entrance animations
+
+Browser verification found that motion's opacity animations never applied under the strict nonce
+CSP: search results stayed at opacity 0 (empty-looking result list) and the visualizer's
+current-node ring stayed invisible, while motion's transform channel did animate. Both effects are
+now plain CSS keyframes (opacity and transform only, staggered by class, no inline styles,
+disabled under reduced motion), verified rendering at opacity 1. motion was then unused and was
+removed from `web/package.json`. This departs from the spec's "motion/react as the animation
+library layer"; the reason is a measured CSP incompatibility, and CSS covers every effect the site
+uses.

@@ -313,3 +313,42 @@ input[type="range"] {
     opacity: 0.35;
   }
 }
+
+/* Search results step in: opacity and transform only, staggered by class. */
+@media (prefers-reduced-motion: no-preference) {
+  .result-in {
+    animation: result-in 300ms var(--ease-out) both;
+  }
+  .result-in-1 { animation-delay: 35ms; }
+  .result-in-2 { animation-delay: 70ms; }
+  .result-in-3 { animation-delay: 105ms; }
+  .result-in-4 { animation-delay: 140ms; }
+  .result-in-5 { animation-delay: 175ms; }
+  .result-in-6 { animation-delay: 210ms; }
+  .result-in-7 { animation-delay: 245ms; }
+  .result-in-8 { animation-delay: 280ms; }
+  .result-in-9 { animation-delay: 315ms; }
+}
+@keyframes result-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* Visualizer: the node being expanded pops in. */
+.ring-pop {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ring-pop {
+    animation: ring-pop 220ms var(--ease-out) both;
+  }
+}
+@keyframes ring-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}

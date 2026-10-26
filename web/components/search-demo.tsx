@@ -1,11 +1,10 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useState } from "react";
 
 import { IconSearch } from "@/components/icons";
 import { fmtMs } from "@/lib/format";
-import { engineMonitor, useEngine } from "@/lib/use-engine";
+import { engineMonitor, useEngineState } from "@/lib/use-engine";
 
 type Hit = { id: string; title: string; module: string; summary: string; distance: number };
 type Reply =
@@ -23,11 +22,10 @@ export function SearchDemo({ corpusSize }: { corpusSize: number }) {
   const [roundTrip, setRoundTrip] = useState<number | null>(null);
   // Bumped per answer, so the result list re-keys on a new answer and not on every keystroke.
   const [answer, setAnswer] = useState(0);
-  const reduce = useReducedMotion();
   // Until the engine is confirmed live, answer from the snapshot: a cold start never blocks the
   // visitor. When it comes live, the next query goes live; input and results are left alone.
-  const engine = useEngine();
-  const mode = engine.state === "live" ? "live" : "snapshot";
+  // State only: the waking counter ticks every second and must not re-render the result list.
+  const mode = useEngineState() === "live" ? "live" : "snapshot";
 
   async function run(q: string) {
     const text = q.trim();
@@ -102,32 +100,20 @@ export function SearchDemo({ corpusSize }: { corpusSize: number }) {
 
       <div className="panel min-h-[22rem] p-4 md:p-5" aria-live="polite" aria-busy={busy}>
         <Status reply={reply} error={error} busy={busy} roundTrip={roundTrip} />
-        {/* One keyed list per answer: the old list fades out, then the new one steps in. mode="wait"
-            needs no injected <style> element, unlike "popLayout", which the nonce CSP would block. */}
-        <AnimatePresence initial={false} mode="wait">
-          <motion.ol
-            key={answer}
-            className="mt-4 flex flex-col"
-            initial={false}
-            exit={reduce ? undefined : { opacity: 0, transition: { duration: 0.15 } }}
-          >
-            {reply?.results.map((h, i) => (
-              <motion.li
-                key={h.id}
-                initial={reduce ? false : { opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: reduce ? 0 : i * 0.035, ease: [0.22, 1, 0.36, 1] }}
-                className="border-t border-rule py-3 first:border-t-0"
-              >
-                <div className="flex items-baseline justify-between gap-4">
-                  <span className="num break-all text-step--1 text-trace">{h.title}</span>
-                  <span className="num shrink-0 text-step--1 text-ink-dim">{h.distance.toFixed(3)}</span>
-                </div>
-                <p className="mt-1 text-step--1 leading-relaxed text-ink">{h.summary}</p>
-              </motion.li>
-            ))}
-          </motion.ol>
-        </AnimatePresence>
+        {/* One keyed list per answer: a new answer replaces the list and its items step in with a
+            CSS animation (staggered by class, no inline styles, so the nonce CSP is satisfied).
+            Re-keyed on a new answer, never on keystrokes. */}
+        <ol key={answer} className="mt-4 flex flex-col">
+          {reply?.results.map((h, i) => (
+            <li key={h.id} className={`result-in result-in-${Math.min(i, 9)} border-t border-rule py-3 first:border-t-0`}>
+              <div className="flex items-baseline justify-between gap-4">
+                <span className="num break-all text-step--1 text-trace">{h.title}</span>
+                <span className="num shrink-0 text-step--1 text-ink-dim">{h.distance.toFixed(3)}</span>
+              </div>
+              <p className="mt-1 text-step--1 leading-relaxed text-ink">{h.summary}</p>
+            </li>
+          ))}
+        </ol>
       </div>
     </div>
   );
