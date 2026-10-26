@@ -126,3 +126,29 @@ The semantic demo uses SIF-weighted GloVe averages (Arora et al. 2017) rather th
 encoder: no PyTorch or model download, the same arithmetic runs in the Next.js route handler to
 embed queries, and it reuses a benchmark dataset. Quality is word-overlap level, which the site
 states.
+
+## D14. Accepted risk: in-memory rate limits (security audit finding 2, S6)
+
+Accepted by the author on 2026-10-26, in writing, for the current deployment shape.
+
+- **What:** token buckets live in process memory, in the engine (`RateLimiter`) and in the demo
+  route (`TokenBucket`). The audit checklist asks for a shared store.
+- **Why it is acceptable now:** the engine runs as one Fly machine (`min_machines_running = 1`),
+  so its per-key buckets are effectively global. The demo route is read-only, capped at 2 KiB
+  bodies and `k <= 20`, and backed by the engine's own per-key limit and the demo key's tighter
+  search budget, so a visitor spread across several Vercel instances gains little.
+- **Residual risk:** buckets reset on restart; each Vercel instance enforces its own demo budget.
+- **Revisit when:** the engine runs more than one machine, or the demo sees abuse. Fix: a shared
+  store (Redis / Vercel KV), which is a new dependency and needs approval first.
+
+## D15. Unused code (security audit finding 8, listed only)
+
+Not deleted, per the author's instruction. Candidates for removal:
+
+| Symbol | Location | Note |
+| --- | --- | --- |
+| `HNSWIndex.search_trace` | `engine/vectorforge/index/hnsw.py:376` | was meant to export visualizer fixtures; the site builds its graph in the browser instead |
+| `HNSWIndex.export_graph` | `engine/vectorforge/index/hnsw.py:492` | same |
+| `FlatIndex.search_labels` | `engine/vectorforge/index/flat.py:72` | the collection's selective-filter path uses `Collection._exact` |
+| `Index.is_deleted` | `engine/vectorforge/index/base.py:93` | no caller |
+| `fmtRecall` | `web/lib/format.ts:9` | no caller |
