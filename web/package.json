@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "packageManager": "pnpm@9.15.9",
-  "engines": { "node": ">=22" },
+  "engines": { "node": ">=24" },
   "scripts": {
     "sync-data": "node scripts/sync-data.mjs",
     "predev": "node scripts/sync-data.mjs",
