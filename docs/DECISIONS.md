@@ -85,3 +85,44 @@ compared exactly; upsert maps only `VectorValidationError` to 422; operations af
 Not changed: the client-IP header is trusted by design and documented as "set only behind a
 proxy that overwrites it"; filtered search still scans payloads O(n) per query under the
 collection lock (an inverted metadata index is out of scope; listed as a limitation).
+
+## D10. Web dependencies
+
+| Package | Version | Why |
+| --- | --- | --- |
+| next, react, react-dom | 16.4.3, 19.3.0 | App Router site (spec) |
+| motion | 14.1.0 | animation layer named by the spec (`motion/react`) |
+| @visx/{scale,shape,axis,grid,group} | 4.0.0 | charts; chosen over Recharts because visx renders plain SVG with no inline style attributes (compatible with a nonce CSP) and pulls in no state library |
+| tailwindcss, @tailwindcss/postcss | 4.3.3 | styling (spec) |
+| typescript | 5.9.3 | strict typing; 7.0 (native port) skipped as too new for Next's type-check integration |
+| eslint, eslint-config-next | 9.39.1, 16.4.3 | lint; ESLint 10 is outside the peer range of eslint-config-next's plugins |
+
+Rule followed: pin exact versions at least two weeks old, except where a security fix requires a
+newer one. Web unit tests use Node's built-in `node:test` with type stripping, so there is no
+test-runner dependency.
+
+## D11. Security upgrades override the two-week rule
+
+`pnpm audit` on next 16.4.0 reported two critical advisories (RCE in the image optimizer with
+SVG; RCE in `use cache` returning typed arrays) and one high (Server Actions DoS), all fixed in
+16.4.1. Upgraded to 16.4.3 (released 2026-10-23, three days before this decision). `pip-audit`
+reported advisories in black 25.12.0 and pytest 8.4.2 (dev tools only, never in the image);
+upgraded to black 26.10.1 and pytest 9.1.1. After the upgrades both audits report no known
+vulnerabilities.
+
+## D12. Benchmark subset and method
+
+200,000 base vectors per dataset (the spec allows a documented subset): pure-Python HNSW
+construction runs at roughly 5 ms per insert at 128 dimensions, so the full 1M base would take
+over an hour per index on its own. Queries: SIFT's first 1,000 official queries; GloVe uses 1,000
+held-out words (rows past the base, seed 0). Everything runs single-threaded, one query at a
+time, FAISS included (`omp_set_num_threads(1)`), so latency compares like with like. The GloVe
+file mirrored by Stanford NLP on Hugging Face has 400,001 rows; the last row is `<unk>` and is
+excluded.
+
+## D13. Demo embeddings without a model
+
+The semantic demo uses SIF-weighted GloVe averages (Arora et al. 2017) rather than a neural
+encoder: no PyTorch or model download, the same arithmetic runs in the Next.js route handler to
+embed queries, and it reuses a benchmark dataset. Quality is word-overlap level, which the site
+states.

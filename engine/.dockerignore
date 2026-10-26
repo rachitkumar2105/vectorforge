@@ -1,0 +1,14 @@
+**/__pycache__
+**/*.pyc
+tests/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+data/
+indexes/
+*.npy
+*.fvecs
+*.bvecs
+.env
+.env.*

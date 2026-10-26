@@ -1,0 +1,262 @@
+@import "tailwindcss";
+
+/* Tokens: see docs/DESIGN.md. Dark-only instrument palette. */
+@theme {
+  --color-bg: #07090b;
+  --color-panel: #0c1115;
+  --color-rule: #1b252c;
+  --color-rule-strong: #2a3842;
+  --color-ink: #e5ecef;
+  --color-ink-dim: #93a3ac;
+  --color-trace: #35e0c2;
+  --color-trace-dim: #1e7f6f;
+  --color-signal: #f0a43a;
+
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --text-step--1: clamp(0.8rem, 0.78rem + 0.1vw, 0.875rem);
+  --text-step-0: clamp(1rem, 0.96rem + 0.2vw, 1.125rem);
+  --text-step-1: clamp(1.2rem, 1.1rem + 0.5vw, 1.5rem);
+  --text-step-2: clamp(1.5rem, 1.3rem + 1vw, 2.125rem);
+  --text-step-3: clamp(2rem, 1.6rem + 2vw, 3.25rem);
+  --text-step-4: clamp(2.6rem, 1.9rem + 3.4vw, 5rem);
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 100%;
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  scroll-padding-top: 5rem;
+}
+
+body {
+  background: var(--color-bg);
+  font-size: var(--text-step-0);
+  line-height: 1.6;
+  min-height: 100dvh;
+  overflow-x: clip;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+::selection {
+  background: var(--color-trace);
+  color: var(--color-bg);
+}
+
+/* Every number in a column aligns. */
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "zero" 1;
+}
+
+/* One visible focus treatment for every interactive element. */
+:where(a, button, input, select, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-trace);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.container-instrument {
+  width: 100%;
+  max-width: 1360px;
+  margin-inline: auto;
+  padding-inline: 16px;
+}
+@media (min-width: 768px) {
+  .container-instrument {
+    padding-inline: 32px;
+  }
+}
+
+.section {
+  padding-block: clamp(4rem, 3rem + 5vw, 9rem);
+  border-top: 1px solid var(--color-rule);
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-step--1);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-trace);
+}
+
+.panel {
+  background: var(--color-panel);
+  border: 1px solid var(--color-rule);
+  border-radius: 2px;
+}
+
+/* Buttons: border and movement for feedback, never a background fill swap. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 1rem;
+  border: 1px solid var(--color-rule-strong);
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: var(--text-step--1);
+  letter-spacing: 0.02em;
+  color: var(--color-ink);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    transform 180ms var(--ease-out),
+    border-color 180ms var(--ease-out),
+    color 180ms var(--ease-out);
+}
+.btn:hover {
+  border-color: var(--color-trace);
+  transform: translateY(-1px);
+}
+.btn:active {
+  transform: translateY(0) scale(0.98);
+}
+.btn[aria-pressed="true"],
+.btn-primary {
+  border-color: var(--color-trace);
+  color: var(--color-trace);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.link {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--color-rule-strong);
+  text-underline-offset: 0.25em;
+  transition: text-decoration-color 180ms var(--ease-out);
+}
+.link:hover {
+  text-decoration-color: var(--color-trace);
+}
+
+/* Skip link: off-screen until focused. */
+.skip-link {
+  position: absolute;
+  left: 16px;
+  top: 0;
+  z-index: 100;
+  padding: 0.75rem 1rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-trace);
+  transform: translateY(-120%);
+  transition: transform 150ms var(--ease-out);
+}
+.skip-link:focus {
+  transform: translateY(12px);
+}
+
+/* Scroll reveal. Only elements that start off-screen are armed (see components/reveal.tsx),
+   so nothing visible at first paint is ever hidden. */
+.reveal[data-state="armed"] {
+  opacity: 0;
+  transform: translateY(16px);
+}
+.reveal[data-state="shown"] {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 600ms var(--ease-out),
+    transform 600ms var(--ease-out);
+}
+
+/* Hero graph: edges draw once on load, then layers drift slowly. Transform and stroke only. */
+.hero-edge {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero-edge {
+    animation: draw 480ms var(--ease-out) both;
+  }
+  .hero-layer-0 {
+    animation: drift-a 38s var(--ease-in-out) infinite alternate;
+  }
+  .hero-layer-1 {
+    animation: drift-b 46s var(--ease-in-out) infinite alternate;
+  }
+  .hero-layer-2 {
+    animation: drift-c 54s var(--ease-in-out) infinite alternate;
+  }
+}
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+@keyframes drift-a {
+  to {
+    transform: translate(-14px, 8px);
+  }
+}
+@keyframes drift-b {
+  to {
+    transform: translate(18px, -10px);
+  }
+}
+@keyframes drift-c {
+  to {
+    transform: translate(-10px, -14px);
+  }
+}
+
+/* Chart and architecture traces draw in when revealed. */
+.trace-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .trace-draw[data-drawn="false"] {
+    stroke-dashoffset: 1;
+  }
+  .trace-draw[data-drawn="true"] {
+    transition: stroke-dashoffset 800ms var(--ease-out);
+  }
+}
+
+input[type="range"] {
+  accent-color: var(--color-trace);
+  min-height: 44px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Staggered edge drawing without per-element inline styles (the CSP forbids style attributes). */
+.hero-delay-1 { animation-delay: 60ms; }
+.hero-delay-2 { animation-delay: 120ms; }
+.hero-delay-3 { animation-delay: 180ms; }
+.hero-delay-4 { animation-delay: 240ms; }
+.hero-delay-5 { animation-delay: 300ms; }
