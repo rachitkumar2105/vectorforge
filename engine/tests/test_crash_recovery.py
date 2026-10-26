@@ -25,23 +25,41 @@ WRITER = textwrap.dedent(
     import numpy as np
     from vectorforge.collection import Collection, UpsertItem
 
-    root, index_type = Path(sys.argv[1]), sys.argv[2]
+    root, index_type, start = Path(sys.argv[1]), sys.argv[2], int(sys.argv[3])
+    if sys.argv[4] == "chunked":
+        # Fault injection (test process only): write each batch in 7-byte flushed chunks, like a
+        # slow disk. A kill then often lands inside a record and leaves a torn tail on disk.
+        import os
+        from vectorforge.storage import wal as wal_mod
+
+        def chunked_append(self, records):
+            data = b"".join(r.encode() for r in records)
+            for pos in range(0, len(data), 7):
+                self._file.write(data[pos : pos + 7])
+                self._file.flush()
+            os.fsync(self._file.fileno())
+
+        wal_mod.WriteAheadLog.append = chunked_append
     path = root / "crash"
     if path.exists():
-        c = Collection.open(path)
+        c = Collection.open(path, checkpoint_every=40)
     else:
+        params = {{"hnsw": {{"M": 8, "ef_construction": 32}}, "ivf": {{"nlist": 4}}, "flat": {{}}}}
         c = Collection.create(root, "crash", dim={dim}, metric="l2", index_type=index_type,
-                              index_params={{"M": 8, "ef_construction": 32}}, checkpoint_every=40)
+                              index_params=params[index_type], checkpoint_every=40)
     print("READY", flush=True)
-    i = 0
+    i = start
     while True:
         batch = [UpsertItem(f"v{{j}}", np.random.default_rng(j).standard_normal({dim})
                  .astype(np.float32), {{"j": j}}) for j in range(i, i + 3)]
         c.upsert(batch)
-        print("ACK", i + 2, flush=True)
+        deleted = -1
         if i % 9 == 0:
             c.delete(f"v{{i}}")
-            print("DEL", i, flush=True)
+            deleted = i
+        # One line, printed only after both the upsert and the delete are durable, so the parent
+        # never sees an ACK without also knowing about that batch's delete.
+        print("ACK", i + 2, deleted, flush=True)
         i += 3
     """
 ).format(dim=DIM)
@@ -51,9 +69,11 @@ def expected(j: int) -> np.ndarray:
     return np.random.default_rng(j).standard_normal(DIM).astype(np.float32)
 
 
-def run_and_kill(root: Path, index_type: str, acks_before_kill: int) -> tuple[int, set[int]]:
+def run_and_kill(
+    root: Path, index_type: str, start: int, acks_before_kill: int, mode: str = "normal"
+) -> tuple[int, set[int]]:
     proc = subprocess.Popen(
-        [sys.executable, "-c", WRITER, str(root), index_type],
+        [sys.executable, "-c", WRITER, str(root), index_type, str(start), mode],
         stdout=subprocess.PIPE,
         text=True,
     )
@@ -61,12 +81,12 @@ def run_and_kill(root: Path, index_type: str, acks_before_kill: int) -> tuple[in
     acked, deleted = -1, set()
     seen = 0
     for line in proc.stdout:
-        kind, _, value = line.strip().partition(" ")
+        kind, *values = line.split()
         if kind == "ACK":
-            acked = int(value)
+            acked = int(values[0])
+            if int(values[1]) >= 0:
+                deleted.add(int(values[1]))
             seen += 1
-        elif kind == "DEL":
-            deleted.add(int(value))
         if seen >= acks_before_kill:
             break
     proc.kill()
@@ -82,7 +102,12 @@ def test_no_acknowledged_write_is_lost_after_kill(tmp_path: Path, run: int) -> N
     acked_total, deleted_total = -1, set()
     # Two kill/reopen cycles per run: the second one recovers on top of a recovered collection.
     for _ in range(2):
-        acked, deleted = run_and_kill(tmp_path, index_type, rng.randint(5, 60))
+        # The second writer continues after the last acknowledged id; ids in between may or may
+        # not have been committed by the first writer, and either outcome is correct.
+        start = acked_total + 1
+        start += (-start) % 3
+        mode = "chunked" if run % 2 else "normal"
+        acked, deleted = run_and_kill(tmp_path, index_type, start, rng.randint(5, 60), mode)
         acked_total = max(acked_total, acked)
         deleted_total |= deleted
         c = Collection.open(tmp_path / "crash")

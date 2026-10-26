@@ -55,3 +55,22 @@ The original assertion said `v3` must not appear in `hits[1:]` of a k=20 search 
 vector), so a k=20 search over 20 live ids must include it. The intended property is that the
 *old* vector is gone. The test now checks that `v3` is not the nearest neighbour of its old
 vector and that no id appears twice. Changed in its own commit, before any engine fix.
+
+## D8. Crash-recovery test harness corrections
+
+Three problems in the first version of `test_crash_recovery.py`, all in the harness, none in
+the property under test:
+
+1. The writer printed `DEL i` after `ACK`, so a delete could be committed before the parent saw
+   it. The parent then expected a deleted id to exist. Fix: one `ACK <last> <deleted>` line
+   printed after both the upsert and the delete are durable.
+2. The second writer restarted at id 0, re-upserting and re-deleting ids from the first run.
+   Fix: it resumes after the last acknowledged id.
+3. The writer passed HNSW parameters (`M`) to IVF. Fix: parameters per index type, with
+   `nlist=4` so IVF auto-trains during the run.
+
+Strengthened at the same time: a hard kill cannot interrupt a single in-kernel `write()`, so in
+30 kills no torn tail appeared (`python bench/scripts/crash_stats.py` before the change: 30/30
+clean). Half the runs now write WAL batches in 7-byte flushed chunks (fault injection in the
+child process only, engine code untouched), and kills leave torn payloads that recovery must
+discard (`crash_stats.py` after: 4/30 torn, 266 bytes discarded, no acknowledged write lost).
