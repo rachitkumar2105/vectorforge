@@ -36,6 +36,18 @@ def _exact_origin(origin: str) -> bool:
     return parts.scheme == "https" or (parts.scheme == "http" and parts.hostname in LOCAL_HOSTS)
 
 
+def _int_env(env: Mapping[str, str], name: str, default: int) -> int:
+    """An integer setting; empty means the default. Anything else that is not an integer stops
+    startup with a ConfigError naming the variable, rather than a bare ValueError."""
+    raw = env.get(name, "").strip()
+    if not raw:
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        raise ConfigError(f"{name} must be an integer number of bytes") from None
+
+
 @dataclass(frozen=True)
 class Settings:
     admin_key: str = field(repr=False)
@@ -97,7 +109,7 @@ class Settings:
             data_dir=Path(env.get("VECTORFORGE_DATA_DIR", "./data")),
             cors_origins=origins,
             env=env.get("VECTORFORGE_ENV", "development"),
-            max_body_bytes=int(env.get("VECTORFORGE_MAX_BODY_BYTES", str(4 * 1024 * 1024))),
+            max_body_bytes=_int_env(env, "VECTORFORGE_MAX_BODY_BYTES", 4 * 1024 * 1024),
             client_ip_header=env.get("VECTORFORGE_CLIENT_IP_HEADER") or None,
             bench_summary=Path(summary) if summary else None,
         )
