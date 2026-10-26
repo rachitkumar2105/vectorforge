@@ -1,8 +1,9 @@
 # FINAL-AUDIT
 
-State of VectorForge on branch `build/v1`, 2026-10-26. Every number below comes from a command
-recorded next to it or in the linked report. Nothing has been pushed or deployed: both need the
-author's approval and accounts. This audit does not claim the system is secure.
+State of VectorForge on branch `build/v1`, updated 2026-10-27. Every number below comes from a
+command recorded next to it or in the linked report. The site is deployed on Vercel Hobby
+(https://vectorforge-olive.vercel.app) and the engine on Render free
+(https://vectorforge-engine.onrender.com). This audit does not claim the system is secure.
 
 ## Phase gates
 
@@ -13,11 +14,11 @@ author's approval and accounts. This audit does not claim the system is secure.
 | 2 HNSW | invariants hold; recall@10 > 0.95 at ef_search=100 on 10k | Passed | `python bench/scripts/hnsw_gate.py`: **0.9970**; invariants tested on 5,000 inserts. |
 | 3 IVF + int8 | recall rises with nprobe; 1.0 at nprobe == nlist; memory measured | Passed | `python bench/scripts/ivf_gate.py`: recall 1.0 at full probe; int8 storage **4.00x** smaller, recall@10 0.9645 at full probe. |
 | 4 Persistence | crash recovery passes repeatedly (10 times) | Passed | crash module run 10 times: `10 passed` each time (100 hard-kill/reopen runs); 4/30 kills left torn WAL tails, all recovered. Also passes under Linux SIGKILL in the container run. |
-| 5 Query service | coverage > 85% on engine; CI green; push | Passed | `pytest --cov=vectorforge`: **199 passed, 95.19%**, locally and in GitHub Actions; pushed to github.com/rachitkumar2105/vectorforge. |
+| 5 Query service | coverage > 85% on engine; CI green; push | Passed | `pytest --cov=vectorforge`: **206 passed, 95.36%** locally on 2026-10-27 (199 passed, 95.19% in GitHub Actions run #4, before the seed tests); pushed to github.com/rachitkumar2105/vectorforge. |
 | 6 Security | `/security-audit` run and report committed; FAILs fixed or accepted | Passed | `SECURITY.md`; findings 1, 3, 4, 5, 6, 9 fixed in separate commits; S6 accepted in writing (DECISIONS D14). |
 | 7 Benchmark | results from a real run; HNSW dominates flat at equal recall | Passed | `python bench/run_bench.py` (log `bench/results/run.log`); `dominates_flat: true` on both datasets. |
-| 8 Site | nine widths, reduced motion, Tab walk, console clean, Lighthouse >= 90 mobile | Passed with one re-measurement pending | `DEMO-REPORT.md`. Lighthouse 93 to 97 performance, 100 accessibility over five runs on the pre-audit-fix build; the post-fix rerun was invalidated by unrelated CPU load and is pending. |
-| 9 Deploy | production URL, demo end to end, site survives engine stopped | **Pending your account steps** | Target changed to free tiers (DECISIONS D16): engine on Render free (`render.yaml`, image pre-builds the demo index from the committed seed; ready in 37 s at 0.1 CPU / 512 MB), site on Vercel Hobby. Rehearsed locally: live search, sleeping engine (paused container), engine down (stopped container) all verified (`DEMO-REPORT.md`). Steps and env vars: `docs/DEPLOY.md`. |
+| 8 Site | nine widths, reduced motion, Tab walk, console clean, Lighthouse >= 90 mobile | Passed, with measured variance | `DEMO-REPORT.md`. Local: 93 to 97 performance over five runs. Production (final build): median performance **94** over five runs (88, 88, 96, 94, 96), accessibility, best practices and SEO 100 on all five; the two 88s ran while the laptop CPU was busy with unrelated work. |
+| 9 Deploy | production URL, demo end to end, site survives engine stopped | Passed (no custom domain) | Free tiers (DECISIONS D16): engine on Render free from `render.yaml`, site on Vercel Hobby. Production: live search answered by the engine (1.80 ms server search, 638.6 ms round trip), pill checking to live in 780 ms. Render service **suspended** from the dashboard: pill ended at "engine asleep, showing saved results", polling stopped at 7 pings, search served 8 labelled snapshot results, console and CSP clean, nine widths without overflow. Service resumed and live again. Evidence: `docs/demo/prod/`, `docs/demo/prod/suspended/`, `DEMO-REPORT.md`. |
 | 10 Final audit | this file and `docs/INTERVIEW.md` | Done | this file; `docs/INTERVIEW.md` (20 questions). |
 
 ## Security checklist (full table and evidence in `SECURITY.md`)
@@ -42,11 +43,11 @@ known vulnerabilities.
 
 - CI: GitHub Actions run #4 on `main` at afb4fc9 (https://github.com/rachitkumar2105/vectorforge/actions/runs/40304566096): **success**. engine 3m39s (ANN import guard, ruff, black, mypy, pytest `199 passed`, coverage 95.19%, pip-audit); web 35s (lint, typecheck, `node --test` 20 tests, build, `pnpm audit --prod`); secrets 16s (gitleaks, full history). Runs #1 and #2 failed on an invalid workflow expression (`hashFiles` in a job-level `if`), fixed in afb4fc9.
 
-- Engine: `cd engine && pytest --cov=vectorforge` -> **199 passed, total coverage 95.19%** (gate 85%).
+- Engine: `cd engine && pytest --cov=vectorforge` -> **206 passed, total coverage 95.36%** (gate 85%), 2026-10-27.
   Same suite in a `python:3.12-slim` Linux container: 192 passed, 95.14% (before the 7 audit
   regression tests were added).
-- Web: `pnpm test` (node:test) -> **20 passed** (browser HNSW invariants and recall, embedding
-  parity with Python, rate limiter, body limit, client key). No coverage tool on the web side.
+- Web: `pnpm test` (node:test) -> **27 passed** (browser HNSW invariants and recall, embedding
+  parity with Python, rate limiter, body limit, client key, engine status monitor). No coverage tool on the web side.
 
 ## Benchmark (single thread, one query at a time, 200,000 base vectors, 1,000 queries)
 
@@ -90,20 +91,22 @@ repository content does not. No dataset, index or `.env` file has ever been comm
 
 ## Verified (command or test)
 
-- Engine gate: `ruff check`, `black --check`, `mypy` (strict), `pytest --cov` -> 199 passed, 95.19%.
+- Engine gate: `ruff check` (all checks passed), `black --check` (37 files unchanged), `mypy` (no issues in 25 files), `pytest --cov` -> 206 passed, 95.36%.
 - Linux: same gate inside `python:3.12-slim` -> 192 passed, 95.14%, crash test under SIGKILL.
 - Benchmark: `python bench/run_bench.py`, log committed.
 - Engine image: `docker build` (89.4 MB); refuses to start without a key; runs as uid 10001; no
   compiler, pip, pytest or faiss inside; health check healthy; key absent from logs.
-- Site: `pnpm lint`, `pnpm typecheck`, `pnpm test` (20), `pnpm build`; browser checks in
-  `DEMO-REPORT.md`; local end-to-end demo with the engine up and down.
+- Site: `pnpm lint`, `pnpm typecheck`, `pnpm test` (27), `pnpm build`; browser checks in
+  `DEMO-REPORT.md`, locally and on production, with the engine up, sleeping (local) and suspended (production).
 - Security: `SECURITY.md` (gitleaks, audits, greps, header checks, tests).
 
 ## Not verified or assumed
 
-- **Deployment (Phase 9):** no Fly/Railway app, no Vercel project, no custom domain, no uptime
-  check, no preview deployments, no HTTPS check, no `fly volumes` snapshot or restore drill.
-- **Lighthouse on the final build:** pending a rerun on an idle machine (see DEMO-REPORT).
+- **Deployment (Phase 9):** no custom domain, no uptime check, preview deployments not
+  exercised. A natural Render sleep and wake was not timed on production (rehearsed locally with
+  a paused container). Render has no persistent disk, so the restore drill in `docs/OPERATIONS.md`
+  (written for a Fly volume) does not apply to this deployment and was not run.
+- **Lighthouse on an idle machine:** every run so far had unrelated CPU load (see DEMO-REPORT).
 - **60 fps:** not profiled with a frame trace.
 - **Other browsers and real phones:** Chrome via Playwright only.
 - **Power-loss durability:** relies on the OS honouring fsync; a process kill cannot test it.
@@ -123,12 +126,12 @@ encrypted by the application.
 
 ## Open items before calling it launched
 
-1. Done: repository created, `build/v1` merged into `main`, pushed, CI green (run #4).
-2. Deploy the engine (Fly config in `engine/fly.toml`), set `VECTORFORGE_ADMIN_KEY` and
-   `VECTORFORGE_DEMO_KEY` as platform secrets, seed the demo with `bench/demo/seed_engine.py`.
-3. Deploy the site to Vercel with `VECTORFORGE_ENGINE_URL` and `VECTORFORGE_DEMO_KEY` as
-   server-side variables; add the production origin to `VECTORFORGE_CORS_ORIGINS`.
-4. Connect a custom domain and set `NEXT_PUBLIC_SITE_URL` and `NEXT_PUBLIC_REPO_URL`.
-5. Add an uptime check on `/healthz`; run the restore drill in `docs/OPERATIONS.md`.
-6. Rerun Lighthouse (five runs) and the QA scripts against the production URL.
-7. Have the privacy and terms drafts reviewed (Claude cannot give legal sign-off).
+1. Done: repository created, `build/v1` merged into `main`, pushed, CI green.
+2. Done: engine on Render free, site on Vercel Hobby, CORS allowlist set to the production origin
+   (preflight checked), QA scripts and Lighthouse run against production, engine-suspended run.
+3. Connect a custom domain; then update `NEXT_PUBLIC_SITE_URL` on Vercel and
+   `VECTORFORGE_CORS_ORIGINS` on Render to it.
+4. Decide on an uptime check on `/healthz`: it would also keep the free engine from sleeping,
+   which the cold-start state was built to tolerate.
+5. Rerun Lighthouse five times on an idle machine.
+6. Have the privacy and terms drafts reviewed (Claude cannot give legal sign-off).

@@ -10,7 +10,9 @@ playwright-cli open http://localhost:3000
 playwright-cli --raw run-code --filename=web/scripts/qa/widths.js
 ```
 
-Nothing is deployed, so none of this is verified on Vercel or Fly.
+The same checks were then repeated on the deployed site, once with the engine up and once with
+the Render service suspended: see **Production** below. The `prod/` copies of the scripts differ
+only in the base URL.
 
 ## Verified
 
@@ -122,16 +124,68 @@ animation never completing), result items and the visualizer ring stuck at opaci
 opacity animations under the nonce CSP; replaced with CSS keyframes, motion removed), pill text
 truncated at 1440, grey block flashing behind unrevealed limitation items.
 
+### Production: https://vectorforge-olive.vercel.app with the engine on https://vectorforge-engine.onrender.com
+
+Scripts in `web/scripts/qa/prod/`, results in `docs/demo/prod/` (engine up) and
+`docs/demo/prod/suspended/` (engine suspended), driven by `playwright-cli` against the live URL.
+
+Engine up (2026-10-26):
+
+| Check | Result |
+| --- | --- |
+| Pill, warm engine (`pill-warm.json`) | checking at 12 ms, engine live at 780 ms, faded to opacity 0, section did not move |
+| Pill fit (`pill-fit.json`) | 343 px at 375, 382 px at 414, 360 px from 768 up, box never moved, no overflow |
+| Live search (`console.json`) | "Live engine results · 1.80 ms HNSW search on the server · 638.6 ms round trip" |
+| Console and CSP (`console.json`, `demo-twice.json`) | 0 messages, 0 CSP violations |
+| Interaction sweep (`interaction-sweep.json`) | 0 errors, 0 CSP at 375 and 1440 |
+| Tab walk (`tab-walk.json`) | 30 stops, every one with a visible outline |
+| Scroll reveals (`scroll-reveal.json`) | 18 reveals, 0 left hidden |
+| Reduced motion (`reduced-motion.json`) | hero animation 1e-05s, no Play button, manual Step works |
+| Nine widths (`widths.json`, `w*-*.jpg`) | no horizontal overflow at any width |
+| Headers (`curl -sI`) | nonce CSP, HSTS with preload, nosniff, Referrer-Policy, Permissions-Policy, X-Frame-Options DENY, COOP |
+
+Lighthouse mobile, `pnpm dlx lighthouse@12.8.2 https://vectorforge-olive.vercel.app/
+--form-factor=mobile` five times (`lighthouse-summary.json`), laptop CPU 30 to 45 percent busy
+with unrelated work:
+
+| Run | Performance | Accessibility | Best practices | SEO | LCP | TBT | CLS |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | 88 | 100 | 100 | 100 | 2.4 s | 400 ms | 0 |
+| 2 | 88 | 100 | 100 | 100 | 2.4 s | 350 ms | 0 |
+| 3 | 96 | 100 | 100 | 100 | 2.3 s | 170 ms | 0 |
+| 4 | 94 | 100 | 100 | 100 | 2.2 s | 230 ms | 0 |
+| 5 | 96 | 100 | 100 | 100 | 2.2 s | 190 ms | 0 |
+
+Median performance 94. The two 88s have the highest blocking time and ran first, while the other
+work was busiest; this is the measured spread, not a cleaned-up number.
+
+Engine suspended (2026-10-27): service suspended from the Render dashboard; engine `/healthz`
+returned 503 and `/api/engine-health` returned `{"engine":"down"}` before the runs.
+
+| Check | Result |
+| --- | --- |
+| Pill (`suspended-pill-down.json`, `unavailable.jpg`) | checking, waking, then "engine asleep, showing saved results" with dot state `unavailable`; 7 health pings, still 7 after another minute (polling stopped) |
+| Search | 8 results labelled "Saved snapshot results · exact search over the same 3,178 embeddings in the site's route handler, not the live engine" |
+| Console and CSP (`suspended-console.json`) | 0 messages, 0 CSP violations |
+| Interaction sweep (`suspended-interaction-sweep.json`) | 0 errors, 0 CSP at 375 and 1440 |
+| Nine widths (`suspended-widths.json`, `w*-*.jpg`) | no horizontal overflow; hero, visualizer, benchmarks and architecture render with the engine off |
+| Sections (`suspended-sections.json`) | benchmarks, demo, architecture and limits captured at 1440 and 375, overflow 0 |
+
+The service was then resumed from the dashboard: `/healthz` 200 on the second poll (under 30 s after the click),
+`/readyz` `{"status":"ready"}`, `/api/engine-health` `{"engine":"live"}`, and a POST to
+`/api/search` came back with `"source":"engine"`.
+
 ## Not verified / assumed
 
-- **Lighthouse after the security-audit fixes.** A rerun on the final build was attempted while
-  unrelated containers on this machine (`kafkabench-kafka1..3`, `quirky_wilson`) held the CPU at
-  97 percent; it scored 79 / 69 / 65 with blocking time climbing per run. Those runs measure the
-  machine, not the page, and were not kept. The audit fixes touched only the demo route and the
-  result-list animation, which load after first paint, so no change is expected, but this is not
-  re-measured. Rerun the five-run command on an idle machine.
+- **Lighthouse on an idle machine.** The production runs above (median 94, two runs at 88) and
+  the engine-down local runs (93, 92) all ran with unrelated work on the CPU. An earlier local
+  attempt at 97 percent CPU (79 / 69 / 65) was discarded. No run on an idle machine or from a
+  hosted Lighthouse service exists for the final build.
 - **60 fps.** Not profiled with a frame-timing trace; the visualizer and hero graph were checked
   visually and by Lighthouse main-thread metrics only.
 - **Real devices and other browsers.** Only Chrome via Playwright, with emulated viewports;
   no Safari or Firefox, no physical phone.
-- **Deployed site.** No Vercel deployment, custom domain or HTTPS check exists yet.
+- **Cold start on production.** The suspended run covers the engine-down path; a natural
+  15-minute sleep followed by a wake (checking, waking, live) was rehearsed locally with a paused
+  container, not timed on Render.
+- **Custom domain.** The site runs on the `vercel.app` subdomain only.

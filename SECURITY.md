@@ -2,8 +2,8 @@
 
 Results of the `/security-audit` run on 2026-10-26 (read-only), followed by the fixes the author
 approved. Each item: verdict and the evidence observed. A PASS means the control is implemented
-and the evidence was seen; it does not mean the system is secure. Nothing is deployed yet, so no
-item is verified against a live host.
+and the evidence was seen; it does not mean the system is secure. Items marked "production" were
+also checked against the deployed hosts on 2026-10-27 (see "Production checks" below).
 
 ## S1 to S20
 
@@ -19,13 +19,13 @@ item is verified against a live host.
 | S8 API secrets server-side | PASS | Keys from environment only, hidden from `repr` (`test_from_env_parses_values`). `grep -rlE "VECTORFORGE_DEMO_KEY\|VECTORFORGE_ENGINE_URL\|X-API-Key" web/.next/static`: 0 files. Throwaway key appeared 0 times in the container's logs. |
 | S9 Password hashing | N/A | No passwords. |
 | S10 MFA | N/A | No accounts. |
-| S11 CORS | PASS | Origins parsed and compared exactly; `*`, paths and `http://localhost.evil.com` refused at startup (`test_cors_origin_must_be_exact`); a non-listed origin's preflight gets no allow header. The production Vercel domain is not configured yet. |
+| S11 CORS | PASS | Origins parsed and compared exactly; `*`, paths and `http://localhost.evil.com` refused at startup (`test_cors_origin_must_be_exact`); a non-listed origin's preflight gets no allow header. Production: a preflight from `https://vectorforge-olive.vercel.app` gets `access-control-allow-origin` for that exact origin; one from `https://evil.example` gets 400 and no allow header. |
 | S12 No tokens in web storage | PASS | `grep -rnE "localStorage\|sessionStorage\|document\.cookie" web/app web/components web/lib`: nothing. The browser calls only same-origin `/api/search`. |
 | S13 Server-side permissions | PASS | Deny by default: every collection route requires a key; writes, listing and `/metrics` require the admin key; the demo key also has a tighter search budget (`test_demo_key_cannot_request_expensive_searches`). |
 | S14 Row-level security | N/A | No database. |
 | S15 Webhooks | N/A | None. |
 | S16 SSRF | PASS | Server-side fetches go only to the fixed `VECTORFORGE_ENGINE_URL` (`web/lib/engine.ts`: `/readyz` for the status pill, `/collections/demo/search` for live queries); no endpoint takes a URL from a request (grep over engine and web). |
-| S17 Source maps | PASS (local build) | `productionBrowserSourceMaps: false`; `find web/.next/static -name "*.map"`: 0. Not checked on a deployed host. |
+| S17 Source maps | PASS | `productionBrowserSourceMaps: false`; `find web/.next/static -name "*.map"`: 0. Production: the three chunks referenced by `/` return 200 and their `.map` URLs return 403. |
 | S18 Default credentials | PASS | No default key. `docker run vectorforge-engine:local` without a key exits with `ConfigError: VECTORFORGE_ADMIN_KEY is not set; refusing to start`. Keys under 32 chars, or a demo key equal to the admin key, are refused. |
 | S19 Logs | PASS (engine) | JSON logs carry route template, status, latency and role only (`test_logs_contain_no_keys_vectors_or_metadata`); unhandled errors log the exception type only. The demo route logs nothing. Hosting-platform request logs are not checked. |
 | S20 Dependencies | PASS | `pip-audit --skip-editable` and `pnpm audit`: "No known vulnerabilities found" after upgrading next 16.4.0 -> 16.4.3, black and pytest (DECISIONS D11). Tests after updating: Linux container run with pytest 9.1.1, 192 passed, coverage 95.14%; web build and tests pass on next 16.4.3. |
@@ -60,6 +60,18 @@ item is verified against a live host.
 - **Database exposure:** N/A; the data directory is a volume inside the engine container and is
   never served.
 
+## Production checks (2026-10-27, `curl` from this laptop)
+
+- Site `https://vectorforge-olive.vercel.app/`: nonce CSP, HSTS (`max-age=63072000; includeSubDomains;
+  preload`), nosniff, `Referrer-Policy: strict-origin-when-cross-origin`, Permissions-Policy,
+  `X-Frame-Options: DENY`, COOP `same-origin`. `/.env` and `/.git/config`: 404.
+- Client bundle: `VECTORFORGE_DEMO_KEY`, `onrender.com` and `X-API-Key` appear in 0 of the
+  JavaScript chunks referenced by the home page HTML (lazily loaded chunks were not fetched).
+- Engine `https://vectorforge-engine.onrender.com`: `/docs` 404 (production mode), `/collections`
+  without a key 401, `/healthz` sends HSTS, `default-src 'none'` CSP, nosniff and `no-store`.
+- Engine down: with the Render service suspended the site served the snapshot with 0 console
+  errors and 0 CSP violations (DEMO-REPORT, Production).
+
 ## Remaining risks
 
 - Rate limits reset on restart and are per instance (accepted, D14).
@@ -68,4 +80,5 @@ item is verified against a live host.
 - Selective metadata filters scan every vector under the collection lock.
 - Data at rest is not encrypted by the application.
 - Two static keys, no rotation API.
-- Nothing above has been checked against the deployed hosts.
+- Only the checks listed under "Production checks" ran against the deployed hosts; Vercel's and
+  Render's own request logs were not reviewed.

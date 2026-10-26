@@ -133,7 +133,8 @@ runs: Windows 11, Python 3.12.3 in `~/.venvs/vectorforge`, 12 logical cores, 15.
 - Details and evidence: `SECURITY.md`.
 
 ### Not verified / assumed
-- Headers, HTTPS and CORS on a deployed host (nothing deployed).
+- Headers, HTTPS and CORS were later checked on the deployed hosts (Phase 9 below); hosting
+  platforms' own request logs were not reviewed.
 
 ## Phase 7: Benchmark harness
 
@@ -160,15 +161,33 @@ runs: Windows 11, Python 3.12.3 in `~/.venvs/vectorforge`, 12 logical cores, 15.
   link, and 16 CSP violations from motion's popLayout.
 
 ### Not verified / assumed
-- Lighthouse on the final (post-audit-fix) build: the rerun hit 97 percent CPU from unrelated
-  containers and was discarded; pending.
+- Lighthouse on an idle machine: every run had unrelated CPU load. On production (final build)
+  the five runs scored 88, 88, 96, 94, 96 (median 94); see `DEMO-REPORT.md`.
 
 ## Phase 9: Deploy
 
+### Verified
+- Engine on Render free (`render.yaml`): https://vectorforge-engine.onrender.com. `/readyz`
+  `{"status":"ready"}`, `/docs` 404, `/collections` without a key 401, CORS preflight allowed only
+  for `https://vectorforge-olive.vercel.app` (`https://evil.example` got 400).
+- Site on Vercel Hobby: https://vectorforge-olive.vercel.app. Security headers present
+  (`curl -sI`); POST `/api/search` returned `"source":"engine"`.
+- Browser QA on production with the engine up and with the Render service suspended
+  (`docs/demo/prod/`, `docs/demo/prod/suspended/`): pill states, console and CSP clean, Tab walk
+  30, nine widths, interaction sweep, snapshot fallback labelled. Service resumed; `/healthz` 200
+  on the second poll.
+- Gate rerun on 2026-10-27: `cd engine && pytest --cov=vectorforge` ->
+  `206 passed, 1 warning in 419.75s`, `Total coverage: 95.36%`; `ruff check vectorforge` ->
+  `All checks passed!`; `black --check vectorforge tests` -> `37 files would be left unchanged.`;
+  `mypy vectorforge` -> `Success: no issues found in 25 source files`; `cd web && pnpm test` ->
+  `tests 27, pass 27, fail 0`; `pnpm typecheck` and `pnpm lint` clean.
+
 ### Not verified / assumed
-- Not done: needs the author's approval to push, and Fly/Railway, Vercel and domain accounts.
-  Deployment files are ready (`engine/Dockerfile`, `engine/fly.toml`, `.github/workflows/ci.yml`,
-  `docs/OPERATIONS.md`). The image was built and run locally.
+- No custom domain; no uptime check; preview deployments not exercised.
+- A natural 15-minute Render sleep and wake was not timed on production (rehearsed locally with a
+  paused container).
+- `engine/fly.toml` and the volume restore drill in `docs/OPERATIONS.md` are for a Fly
+  deployment that was not used.
 
 ## Phase 10: Final audit
 
