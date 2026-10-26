@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { BodyTooLarge, readLimited } from "@/lib/body-limit";
+import { clientKey } from "@/lib/client-key";
 import { demoData } from "@/lib/demo-data";
 import { cosineTopK, embedQuery } from "@/lib/embed";
 import { TokenBucket } from "@/lib/ratelimit";
@@ -19,18 +20,13 @@ export const runtime = "nodejs";
 
 type Hit = { id: string; title: string; module: string; summary: string; distance: number };
 
-function clientKey(req: NextRequest): string {
-  // On Vercel the platform sets x-forwarded-for; its first entry is the client.
-  return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
-}
-
 function bad(status: number, code: string, message: string, headers?: Record<string, string>) {
   return NextResponse.json({ error: { code, message } }, { status, headers });
 }
 
 export async function POST(req: NextRequest) {
   const started = performance.now();
-  const wait = limiter.take(clientKey(req));
+  const wait = limiter.take(clientKey(req.headers));
   if (wait) return bad(429, "rate_limited", "Too many searches. Try again shortly.", { "Retry-After": String(wait) });
 
   let body: unknown;
