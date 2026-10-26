@@ -74,3 +74,14 @@ Strengthened at the same time: a hard kill cannot interrupt a single in-kernel `
 clean). Half the runs now write WAL batches in 7-byte flushed chunks (fault injection in the
 child process only, engine code untouched), and kills leave torn payloads that recovery must
 discard (`crash_stats.py` after: 4/30 torn, 266 bytes discarded, no acknowledged write lost).
+
+## D9. Code review after Phase 5 (built-in `/code-review`, high effort, engine/vectorforge)
+
+Ten findings. Fixed: oversized WAL records refused before ack (`RecordTooLargeError`);
+failed-auth budget only spent by failures and never blocks a valid key; CORS origins parsed and
+compared exactly; upsert maps only `VectorValidationError` to 422; operations after drop raise
+`CollectionClosedError` (404); HNSW degree cap enforced even when orphan repair cannot make room;
+413s and preflights now pass through the observing middleware; WAL replay streams records.
+Not changed: the client-IP header is trusted by design and documented as "set only behind a
+proxy that overwrites it"; filtered search still scans payloads O(n) per query under the
+collection lock (an inverted metadata index is out of scope; listed as a limitation).

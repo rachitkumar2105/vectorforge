@@ -10,7 +10,12 @@ import numpy as np
 from fastapi import APIRouter, Depends, Header, Request, Response
 from fastapi.responses import PlainTextResponse
 
-from vectorforge.collection import FilterError, UpsertItem
+from vectorforge.collection import (
+    CollectionClosedError,
+    FilterError,
+    UpsertItem,
+    VectorValidationError,
+)
 from vectorforge.service.database import CollectionNotFoundError, Database
 from vectorforge.service.errors import ApiError
 from vectorforge.service.schemas import (
@@ -52,15 +57,16 @@ def _client_ip(request: Request, settings: Settings) -> str:
 def principal(request: Request, x_api_key: Annotated[str | None, Header()] = None) -> Principal:
     settings = _settings(request)
     limiter: RateLimiter = request.app.state.limiter
-    ip = _client_ip(request, settings)
-    # Once an address has burned through its failed-auth budget it is refused before the key is
-    # even checked, so guessing keys cannot continue at full speed.
-    wait = limiter.blocked(ip, "auth_fail", settings.auth_fail_rate)
-    if wait:
-        raise ApiError(429, "rate_limited", "too many failed attempts", {"Retry-After": str(wait)})
     who = identify(x_api_key, settings)
     if who is None:
-        limiter.take(ip, "auth_fail", settings.auth_fail_rate)
+        # Only failures spend from the per-address budget, and a valid key is never refused by
+        # it. Otherwise everyone behind one proxy address could be locked out by a stranger.
+        ip = _client_ip(request, settings)
+        if limiter.take(ip, "auth_fail", settings.auth_fail_rate):
+            wait = limiter.blocked(ip, "auth_fail", settings.auth_fail_rate)
+            raise ApiError(
+                429, "rate_limited", "too many failed attempts", {"Retry-After": str(wait)}
+            )
         raise ApiError(401, "unauthorized", "missing or invalid API key")
     request.state.role = who.role
     return who
@@ -167,8 +173,10 @@ def upsert(name: str, body: UpsertRequest, request: Request, who: Caller, db: DB
     ]
     try:
         n = c.upsert(batch)
-    except ValueError as exc:  # dimension mismatch, non-finite after float32 cast
+    except VectorValidationError as exc:  # messages are ours: id, dimension, size
         raise ApiError(422, "validation_error", str(exc)) from None
+    except CollectionClosedError:
+        raise ApiError(404, "not_found", "collection not found") from None
     return UpsertResponse(upserted=n)
 
 
@@ -194,6 +202,8 @@ def search(name: str, body: SearchRequest, request: Request, who: Caller, db: DB
         )
     except FilterError as exc:
         raise ApiError(422, "validation_error", str(exc)) from None
+    except CollectionClosedError:
+        raise ApiError(404, "not_found", "collection not found") from None
     took = (time.perf_counter() - started) * 1000
     return SearchResponse(
         results=[SearchHit(id=h.id, distance=h.distance, metadata=h.metadata) for h in out.hits],

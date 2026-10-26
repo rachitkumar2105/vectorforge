@@ -315,6 +315,13 @@ class HNSWIndex(Index):
                     keep.remove(n)
                     dropped.append(n)
             keep.extend(orphans)
+            if len(keep) > cap:
+                # No neighbour could spare an edge. The degree cap wins: the furthest orphans
+                # lose their only link on this layer. They remain reachable from the layers
+                # below, which every node also belongs to.
+                keep.sort(key=lambda x: dist[x])
+                dropped.extend(keep[cap:])
+                keep = keep[:cap]
         for n in dropped:
             self._links[n][layer].remove(e)
         self._links[e][layer] = keep

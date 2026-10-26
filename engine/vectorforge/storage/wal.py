@@ -41,6 +41,11 @@ HEADER_SIZE = struct.calcsize(HEADER)
 MAX_RECORD_BYTES = 1 << 20
 
 
+class RecordTooLargeError(ValueError):
+    """A record would exceed MAX_RECORD_BYTES. Refused before anything is written, because
+    replay treats an over-long length prefix as corruption and would drop it after the ack."""
+
+
 class Op(enum.IntEnum):
     UPSERT = 1
     DELETE = 2
@@ -68,6 +73,8 @@ class WalRecord:
                 meta,
             ]
         payload = b"".join(parts)
+        if len(payload) > MAX_RECORD_BYTES:
+            raise RecordTooLargeError(f"WAL record too large ({len(payload)} bytes)")
         return struct.pack(HEADER, len(payload), zlib.crc32(payload)) + payload
 
     @classmethod
@@ -120,33 +127,35 @@ class WriteAheadLog:
     def replay(path: Path) -> tuple[list[WalRecord], ReplayReport]:
         if not path.exists():
             return [], ReplayReport(0, 0, None)
-        data = path.read_bytes()
+        size = path.stat().st_size
         records: list[WalRecord] = []
         pos, reason = 0, None
-        while pos < len(data):
-            if len(data) - pos < HEADER_SIZE:
-                reason = "torn header"
-                break
-            length, crc = struct.unpack_from(HEADER, data, pos)
-            if length == 0 or length > MAX_RECORD_BYTES:
-                reason = "length out of range"
-                break
-            start, end = pos + HEADER_SIZE, pos + HEADER_SIZE + length
-            if end > len(data):
-                reason = "torn payload"
-                break
-            payload = data[start:end]
-            if zlib.crc32(payload) != crc:
-                reason = "crc mismatch"
-                break
-            try:
-                records.append(WalRecord.decode(payload))
-            except (struct.error, ValueError, UnicodeDecodeError):
-                # CRC matched but the content does not parse: a writer bug, not a torn write.
-                reason = "undecodable record"
-                break
-            pos = end
-        truncated = len(data) - pos
+        # Stream record by record: memory stays bounded by one record, not the whole log.
+        with path.open("rb") as f:
+            while pos < size:
+                header = f.read(HEADER_SIZE)
+                if len(header) < HEADER_SIZE:
+                    reason = "torn header"
+                    break
+                length, crc = struct.unpack(HEADER, header)
+                if length == 0 or length > MAX_RECORD_BYTES:
+                    reason = "length out of range"
+                    break
+                payload = f.read(length)
+                if len(payload) < length:
+                    reason = "torn payload"
+                    break
+                if zlib.crc32(payload) != crc:
+                    reason = "crc mismatch"
+                    break
+                try:
+                    records.append(WalRecord.decode(payload))
+                except (struct.error, ValueError, UnicodeDecodeError):
+                    # CRC matched but the content does not parse: a writer bug, not a torn write.
+                    reason = "undecodable record"
+                    break
+                pos += HEADER_SIZE + length
+        truncated = size - pos
         if truncated:
             # Cut the bad tail so the next append starts at a record boundary. Without this, new
             # records would sit behind garbage and be unreachable on the next replay.

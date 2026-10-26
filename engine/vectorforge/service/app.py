@@ -102,6 +102,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     errors.install(app)
     app.include_router(router)
 
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origins,
+        allow_methods=["GET", "POST", "DELETE"],
+        allow_headers=["Content-Type", "X-API-Key"],
+        allow_credentials=False,
+        max_age=600,
+    )
+    # Middleware added first sits innermost. CORS and the body limit go in before `observe`, so
+    # that 413s and preflight responses still get logged, counted and security headers.
+    app.add_middleware(BodySizeLimit, limit=settings.max_body_bytes)
+
     @app.middleware("http")
     async def observe(
         request: Request, call_next: Callable[[Request], Awaitable[Response]]
@@ -137,16 +149,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
         return response
 
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.cors_origins,
-        allow_methods=["GET", "POST", "DELETE"],
-        allow_headers=["Content-Type", "X-API-Key"],
-        allow_credentials=False,
-        max_age=600,
-    )
-    # Outermost, so oversized bodies are refused before any other work happens.
-    app.add_middleware(BodySizeLimit, limit=settings.max_body_bytes)
     return app
 
 

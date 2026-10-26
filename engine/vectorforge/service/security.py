@@ -11,6 +11,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
+from urllib.parse import urlsplit
 
 MIN_KEY_LENGTH = 32
 Role = Literal["admin", "demo"]
@@ -18,6 +19,21 @@ Role = Literal["admin", "demo"]
 
 class ConfigError(RuntimeError):
     """The service is misconfigured and must not start."""
+
+
+LOCAL_HOSTS = ("localhost", "127.0.0.1")
+
+
+def _exact_origin(origin: str) -> bool:
+    """An exact allowlist entry: scheme://host[:port] and nothing else, no wildcard (S11).
+    https for any host; plain http only for localhost, compared on the parsed hostname so that
+    "http://localhost.evil.com" does not slip through a prefix check."""
+    parts = urlsplit(origin)
+    if "*" in origin or parts.path or parts.query or parts.fragment or not parts.hostname:
+        return False
+    if f"{parts.scheme}://{parts.netloc}" != origin:
+        return False
+    return parts.scheme == "https" or (parts.scheme == "http" and parts.hostname in LOCAL_HOSTS)
 
 
 @dataclass(frozen=True)
@@ -34,6 +50,8 @@ class Settings:
     write_rate: tuple[float, int] = (5.0, 10)
     auth_fail_rate: tuple[float, int] = (0.2, 10)
     # Header carrying the real client IP when behind a trusted proxy (e.g. "Fly-Client-IP").
+    # Only set this when the engine is reachable solely through that proxy, which overwrites the
+    # header; otherwise a client can forge it.
     client_ip_header: str | None = None
     bench_summary: Path | None = None
 
@@ -50,10 +68,7 @@ class Settings:
             if hmac.compare_digest(self.demo_key, self.admin_key):
                 raise ConfigError("the demo key must differ from the admin key")
         for origin in self.cors_origins:
-            # An exact allowlist only. A wildcard would let any site script the engine.
-            if "*" in origin or not origin.startswith(
-                ("https://", "http://localhost", "http://127.0.0.1")
-            ):
+            if not _exact_origin(origin):
                 raise ConfigError(
                     f"CORS origin {origin!r} is not an exact https or localhost origin"
                 )

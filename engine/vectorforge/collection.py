@@ -33,7 +33,7 @@ from vectorforge.index.hnsw import HNSWIndex
 from vectorforge.index.ivf import IVFIndex
 from vectorforge.storage.metadata import Manifest, atomic_write_json, read_json
 from vectorforge.storage.segment import SegmentStore
-from vectorforge.storage.wal import Op, WalRecord, WriteAheadLog
+from vectorforge.storage.wal import Op, RecordTooLargeError, WalRecord, WriteAheadLog
 
 INDEX_TYPES = ("hnsw", "ivf", "flat")
 NAME_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,62}$")
@@ -48,6 +48,14 @@ EXACT_FILTER_FRACTION = 0.05
 
 class FilterError(ValueError):
     """The metadata filter is malformed."""
+
+
+class VectorValidationError(ValueError):
+    """An upserted item is invalid (dimension, non-finite values, record too large)."""
+
+
+class CollectionClosedError(KeyError):
+    """The collection was closed or dropped while a caller still held a reference to it."""
 
 
 @dataclass(frozen=True)
@@ -119,6 +127,7 @@ class Collection:
         self.checkpoint_every = checkpoint_every
         self.metric: Metric = check_metric(manifest.metric)
         self._lock = threading.RLock()
+        self._closed = False
         self._ids: dict[str, int] = {}
         self._label_ids: list[str | None] = []
         self._payloads: list[Payload | None] = []
@@ -168,9 +177,18 @@ class Collection:
 
     def close(self) -> None:
         with self._lock:
+            if self._closed:
+                return
             if self._since_checkpoint:
                 self.checkpoint()
             self._release_files()
+            self._closed = True
+
+    def _check_open(self) -> None:
+        # Requests take a reference before acquiring the lock, so a concurrent drop can win the
+        # race. They must fail cleanly instead of touching closed files.
+        if self._closed:
+            raise CollectionClosedError(self.manifest.name)
 
     def _release_files(self) -> None:
         self.wal.close()
@@ -178,6 +196,7 @@ class Collection:
 
     def drop(self) -> None:
         with self._lock:
+            self._closed = True
             self._release_files()
             shutil.rmtree(self.path)
 
@@ -221,25 +240,29 @@ class Collection:
     def _validate(self, item: UpsertItem) -> npt.NDArray[np.float32]:
         v = np.asarray(item.vector, dtype=np.float32).reshape(-1)
         if v.shape[0] != self.manifest.dim:
-            raise ValueError(
+            raise VectorValidationError(
                 f"vector {item.id!r} has dimension {v.shape[0]}, expected {self.manifest.dim}"
             )
         if not np.all(np.isfinite(v)):
-            raise ValueError(f"vector {item.id!r} contains non-finite values")
+            raise VectorValidationError(f"vector {item.id!r} contains non-finite values")
         return v
 
     def upsert(self, items: list[UpsertItem]) -> int:
         vectors = [self._validate(it) for it in items]  # reject the whole batch before logging
         with self._lock:
-            records = []
-            for it, v in zip(items, vectors, strict=True):
-                self._lsn += 1
-                records.append(
-                    WalRecord(
-                        lsn=self._lsn, op=Op.UPSERT, ident=it.id, vector=v, metadata=it.metadata
-                    )
+            self._check_open()
+            records = [
+                WalRecord(
+                    lsn=self._lsn + i, op=Op.UPSERT, ident=it.id, vector=v, metadata=it.metadata
                 )
-            self.wal.append(records)  # durable from here on
+                for i, (it, v) in enumerate(zip(items, vectors, strict=True), start=1)
+            ]
+            try:
+                self.wal.append(records)  # durable from here on
+            except RecordTooLargeError as exc:
+                raise VectorValidationError(str(exc)) from None
+            # Advance the LSN only once the batch is on disk, so a refused batch leaves no gap.
+            self._lsn += len(records)
             for rec in records:
                 self._apply(rec)
             self._after_write(len(records))
@@ -247,6 +270,7 @@ class Collection:
 
     def delete(self, ident: str) -> None:
         with self._lock:
+            self._check_open()
             if ident not in self._ids:
                 raise KeyError(ident)
             self._lsn += 1
@@ -325,6 +349,7 @@ class Collection:
 
     def get(self, ident: str) -> tuple[npt.NDArray[np.float32], Payload]:
         with self._lock:
+            self._check_open()
             label = self._ids[ident]
             payload = self._payloads[label]
             assert payload is not None
@@ -343,6 +368,7 @@ class Collection:
         predicate = compile_filter(filter)
         q = np.asarray(vector, dtype=np.float32).reshape(-1)
         with self._lock:
+            self._check_open()
             strategy = {"hnsw": "graph", "ivf": "ivf", "flat": "exact"}[self.manifest.index_type]
             allow: Allow | None = None
             if predicate is not None:
