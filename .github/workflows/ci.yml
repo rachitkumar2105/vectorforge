@@ -4,6 +4,8 @@ on:
   push:
     branches: [main, "build/**"]
   pull_request:
+  # Manual reruns from the Actions tab.
+  workflow_dispatch:
 
 permissions:
   contents: read
