@@ -178,4 +178,4 @@ runs: Windows 11, Python 3.12.3 in `~/.venvs/vectorforge`, 12 logical cores, 15.
 
 ### Verified
 - GitHub Actions run #4 on `main` at afb4fc9 (https://github.com/rachitkumar2105/vectorforge/actions/runs/40304566096): **success**. engine 3m39s (ANN import guard, ruff, black, mypy, pytest `199 passed`, coverage 95.19%, pip-audit); web 35s (lint, typecheck, `node --test` 20 tests, build, `pnpm audit --prod`); secrets 16s (gitleaks, full history). Runs #1 and #2 failed on an invalid workflow expression (`hashFiles` in a job-level `if`), fixed in afb4fc9.
-- Warnings only: actions pinned at v4/v5 run on Node 20, which GitHub is deprecating; the `ubuntu-latest` label is migrating to Ubuntu 26.
+- Run #8 on `main` at afeb1ab (https://github.com/rachitkumar2105/vectorforge/actions/runs/40305889903): **success** after bumping to Node 24 actions (checkout 7.0.1, setup-python 7.0.0, setup-node 7.1.0, pnpm/action-setup 6.1.0); engine 3m51s, web 34s, secrets 15s. Annotations: 0 warnings (the Node 20 deprecation warnings are gone), 3 notices that `ubuntu-latest` is migrating to Ubuntu 26.
