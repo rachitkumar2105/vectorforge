@@ -120,19 +120,56 @@ runs: Windows 11, Python 3.12.3 in `~/.venvs/vectorforge`, 12 logical cores, 15.
 ### Not verified / assumed
 - GitHub push and CI run: not done; pushing needs the author's approval and a remote.
 
-## Phase 6-8 (in progress)
+## Phase 6: Security hardening
 
 ### Verified
-- `python bench/run_bench.py` (full log `bench/results/run.log`): SIFT and GloVe, 200k base each.
-  `dominates_flat: true` for both. Headline (summary.json): SIFT HNSW ef=40 recall@10 0.954 at
-  976.4 q/s vs exact 22.8 q/s (42.8x); FAISS 9.5x faster at same recall. GloVe ef=120 recall@10
-  0.959 at 167.1 q/s vs exact 27.9 (6.0x); FAISS 12.6x faster.
-- `pip-audit --skip-editable` and `pnpm audit`: no known vulnerabilities (after D11 upgrades).
-- Web: `pnpm typecheck` clean, `pnpm lint` clean, `pnpm test` 12 pass, `pnpm build` succeeds;
-  no `.map` files in `.next/static`.
+- `/security-audit` (read-only) produced 9 findings and the S1-S20 table; the author approved
+  fixing 1, 3, 4, 5, 6 and 9, accepting 2 in writing, listing 8. Each fix has its own commit, with
+  failing tests committed first where testable (`engine/tests/test_audit_fixes.py`,
+  `web/tests/body-limit.test.ts`, `web/tests/client-key.test.ts`).
+- After the fixes: `cd engine && pytest --cov=vectorforge` -> `199 passed`, 95.19%; ruff, black,
+  mypy clean; `pnpm test` -> 20 passed.
+- gitleaks v8.24.3 over full history: 39 commits, no leaks. `pip-audit`, `pnpm audit`: clean.
+- Details and evidence: `SECURITY.md`.
 
-### Not verified / assumed (open)
-- Browser QA not yet run (scripts in `web/scripts/qa/`): nine widths, reduced motion, Tab walk,
-  console, Lighthouse. DEMO-REPORT.md not written.
-- Docker image build, gitleaks scan, `/security-audit`, FINAL-AUDIT.md: not done.
-- Push, Vercel and Fly deploys: need the author's approval and accounts.
+### Not verified / assumed
+- Headers, HTTPS and CORS on a deployed host (nothing deployed).
+
+## Phase 7: Benchmark harness
+
+### Verified
+- `python bench/run_bench.py` (full log `bench/results/run.log`, harness commit 0e658ec):
+  SIFT and GloVe, 200k base each, 1,000 queries, single thread for both engines.
+  `dominates_flat: true` on both. Headline: SIFT HNSW ef=40 recall@10 0.954 at 976.4 q/s vs
+  exact 22.8 q/s (42.8x), FAISS 9.5x faster at the same recall; GloVe ef=120 recall@10 0.959 at
+  167.1 q/s vs exact 27.9 q/s (6.0x), FAISS 12.6x faster. Full tables in `FINAL-AUDIT.md`.
+- Our flat search matches SIFT's published ground truth exactly (top-10 overlap 1.0, 20 queries).
+
+### Not verified / assumed
+- Results are from one laptop run; repeat-run variance is not measured.
+
+## Phase 8: Showcase website
+
+### Verified
+- See `DEMO-REPORT.md`: nine widths without overflow, reduced motion, a 30-stop Tab walk with
+  visible focus everywhere, 0 console errors and 0 CSP violations across an interaction sweep at
+  two widths, Lighthouse mobile performance 93-97 and accessibility 100 (five runs), and a local
+  end-to-end demo against the engine container, up and down.
+- Bugs found by these checks and fixed: nav overflow at 768 px, chart log-axis clutter, chart not
+  shrinking on resize, 740 ms blocking time, keyboard unreachable lazy sections, an unnamed icon
+  link, and 16 CSP violations from motion's popLayout.
+
+### Not verified / assumed
+- Lighthouse on the final (post-audit-fix) build: the rerun hit 97 percent CPU from unrelated
+  containers and was discarded; pending.
+
+## Phase 9: Deploy
+
+### Not verified / assumed
+- Not done: needs the author's approval to push, and Fly/Railway, Vercel and domain accounts.
+  Deployment files are ready (`engine/Dockerfile`, `engine/fly.toml`, `.github/workflows/ci.yml`,
+  `docs/OPERATIONS.md`). The image was built and run locally.
+
+## Phase 10: Final audit
+
+- `FINAL-AUDIT.md` and `docs/INTERVIEW.md` written.
