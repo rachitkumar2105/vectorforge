@@ -1,0 +1,72 @@
+[build-system]
+requires = ["setuptools>=69,<80"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vectorforge"
+version = "0.1.0"
+description = "A vector database written from first principles: HNSW, IVF, int8 quantization, WAL, FastAPI service."
+readme = "../README.md"
+requires-python = ">=3.11,<3.14"
+license = { text = "MIT" }
+authors = [{ name = "Rachit Kumar Singh" }]
+dependencies = [
+  "numpy>=2.0,<3",
+  "fastapi>=0.115,<1",
+  "pydantic>=2.7,<3",
+  "uvicorn>=0.30,<1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.2,<9",
+  "pytest-cov>=5,<7",
+  "httpx>=0.27,<1",
+  "ruff>=0.6,<1",
+  "black>=24.4,<26",
+  "mypy>=1.10,<2",
+  "pre-commit>=3.7,<5",
+  "pip-audit>=2.7,<3",
+]
+# FAISS is only ever imported by bench/, never by the engine (credibility rule 1).
+bench = ["faiss-cpu>=1.8,<2"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["vectorforge*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = ["slow: long-running tests (crash recovery loops, 10k recall runs)"]
+
+[tool.coverage.run]
+source = ["vectorforge"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 85
+show_missing = true
+skip_covered = false
+exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "raise NotImplementedError", "@abstractmethod"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "N", "SIM"]
+ignore = ["S101"]  # assert is fine in tests and for internal invariants
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S", "N802", "N806"]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+packages = ["vectorforge"]
+plugins = ["pydantic.mypy"]

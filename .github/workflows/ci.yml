@@ -1,0 +1,60 @@
+name: ci
+
+on:
+  push:
+    branches: [main, "build/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  engine:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: engine
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: engine/pyproject.toml
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Engine must not import ANN libraries
+        run: "! grep -rEn '^\\s*(import|from)\\s+(faiss|hnswlib|annoy|scann|nmslib)' vectorforge"
+      - name: Lint
+        run: ruff check vectorforge tests ../bench
+      - name: Format
+        run: black --check vectorforge tests ../bench
+      - name: Type-check
+        run: mypy
+      - name: Test with coverage gate
+        run: pytest --cov=vectorforge --cov-report=term-missing --cov-fail-under=85
+      - name: Dependency audit
+        run: pip-audit --skip-editable
+
+  web:
+    runs-on: ubuntu-latest
+    if: hashFiles('web/package.json') != ''
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      - run: pnpm audit --prod

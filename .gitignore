@@ -1,0 +1,53 @@
+# Secrets and environment files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# Datasets and built indexes (never committed; see bench/datasets/)
+*.fvecs
+*.bvecs
+*.ivecs
+*.npy
+*.npz
+*.hdf5
+data/
+indexes/
+!web/data/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+build/
+dist/
+.venv/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
+
+# Playwright / tooling output
+.playwright-cli/
+playwright-report/
+test-results/
+.lighthouseci/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

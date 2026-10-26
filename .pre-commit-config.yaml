@@ -1,0 +1,28 @@
+# Hooks run from the shared venv (~/.venvs/vectorforge); "language: system" avoids pre-commit
+# creating a second copy of every tool in its own cache.
+repos:
+  - repo: local
+    hooks:
+      - id: ruff
+        name: ruff
+        entry: ruff check engine/vectorforge engine/tests bench
+        language: system
+        pass_filenames: false
+        types: [python]
+      - id: black
+        name: black
+        entry: black --check engine/vectorforge engine/tests bench
+        language: system
+        pass_filenames: false
+        types: [python]
+      - id: mypy
+        name: mypy
+        entry: bash -c "cd engine && mypy"
+        language: system
+        pass_filenames: false
+        types: [python]
+      - id: no-ann-libs-in-engine
+        name: engine must not import ANN libraries
+        entry: bash -c "! grep -rEn '^\s*(import|from)\s+(faiss|hnswlib|annoy|scann|nmslib)' engine/vectorforge"
+        language: system
+        pass_filenames: false
