@@ -17,6 +17,7 @@ from vectorforge.service.database import Database
 from vectorforge.service.observability import Metrics, configure_logging, log_event
 from vectorforge.service.routes import router
 from vectorforge.service.security import RateLimiter, Settings
+from vectorforge.service.seed import apply_seed
 
 access_log = logging.getLogger("vectorforge.access")
 
@@ -88,6 +89,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         db.load_all()
         log_event(access_log, "collections loaded", count=len(db.names()))
+        if settings.seed_dir is not None:
+            # Before the server accepts traffic, so /readyz only turns 200 once the demo exists.
+            apply_seed(db, settings.seed_dir)
         yield
         db.close_all()  # checkpoints every collection, so the next start replays nothing
 

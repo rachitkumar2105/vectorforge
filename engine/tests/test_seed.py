@@ -90,15 +90,19 @@ def test_malformed_seed_refuses_to_start(tmp_path: Path) -> None:
     seed = tmp_path / "seed"
     seed.mkdir()
     write_seed(seed, count_override=41)  # manifest claims more vectors than the file holds
-    with pytest.raises(ConfigError, match="seed"):
-        with TestClient(create_app(settings(tmp_path / "data", seed))):
-            pass
+    with (
+        pytest.raises(ConfigError, match="seed"),
+        TestClient(create_app(settings(tmp_path / "data", seed))),
+    ):
+        pass
 
 
 def test_missing_seed_manifest_refuses_to_start(tmp_path: Path) -> None:
-    with pytest.raises(ConfigError, match="seed"):
-        with TestClient(create_app(settings(tmp_path / "data", tmp_path / "nowhere"))):
-            pass
+    with (
+        pytest.raises(ConfigError, match="seed"),
+        TestClient(create_app(settings(tmp_path / "data", tmp_path / "nowhere"))),
+    ):
+        pass
 
 
 def test_seed_dir_from_env(tmp_path: Path) -> None:

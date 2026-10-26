@@ -66,6 +66,8 @@ class Settings:
     # header; otherwise a client can forge it.
     client_ip_header: str | None = None
     bench_summary: Path | None = None
+    # Directory with a seed manifest; the collection it describes is built at startup if absent.
+    seed_dir: Path | None = None
 
     def __post_init__(self) -> None:
         if not self.admin_key or len(self.admin_key) < MIN_KEY_LENGTH:
@@ -112,6 +114,7 @@ class Settings:
             max_body_bytes=_int_env(env, "VECTORFORGE_MAX_BODY_BYTES", 4 * 1024 * 1024),
             client_ip_header=env.get("VECTORFORGE_CLIENT_IP_HEADER") or None,
             bench_summary=Path(summary) if summary else None,
+            seed_dir=Path(seed) if (seed := env.get("VECTORFORGE_SEED_DIR")) else None,
         )
 
 
