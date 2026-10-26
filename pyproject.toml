@@ -15,7 +15,8 @@ ignore = ["S101", "SIM108"]
 
 [tool.ruff.lint.per-file-ignores]
 "engine/tests/**" = ["S", "N802", "N803", "N806", "E501"]
-"bench/**" = ["S311", "N803", "N806"]
+# Bench scripts carry long human-readable dataset descriptions in their JSON output.
+"bench/**" = ["S311", "N803", "N806", "E501"]
 # M is the HNSW paper's own symbol; renaming it would make the code harder to map to the paper.
 "engine/vectorforge/index/hnsw.py" = ["N803"]
 
