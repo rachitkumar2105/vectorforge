@@ -4,25 +4,30 @@ import { BodyTooLarge, readLimited } from "@/lib/body-limit";
 import { clientKey } from "@/lib/client-key";
 import { demoData } from "@/lib/demo-data";
 import { cosineTopK, embedQuery } from "@/lib/embed";
+import { searchEngine } from "@/lib/engine";
 import { TokenBucket } from "@/lib/ratelimit";
 
-// Read-only proxy for the public demo (S12, S13). The browser never sees an engine key or URL:
-// both are server-only env vars read here. The engine URL is fixed configuration, never taken
-// from the request, so this route cannot be pointed at another host (S16).
-const ENGINE_URL = process.env.VECTORFORGE_ENGINE_URL;
-const DEMO_KEY = process.env.VECTORFORGE_DEMO_KEY;
-const ENGINE_TIMEOUT_MS = 2500;
-// A valid body is a 200-character query and a small integer: well under 2 KiB.
+// Read-only proxy for the public demo (S12, S13). The browser never sees the engine key or URL.
+//
+// mode "snapshot": answer from the precomputed embeddings with exact search in this handler.
+//   The page uses it while the engine is checking, waking or unavailable, so visitors are never
+//   blocked on a cold start.
+// mode "live": ask the engine; on any failure, fall back to the snapshot and say so.
+
+// A valid body is a 200-character query, a small integer and a mode: well under 2 KiB.
 const MAX_BODY_BYTES = 2048;
 const limiter = new TokenBucket(1, 8);
 
 export const runtime = "nodejs";
+export const maxDuration = 10;
 
 type Hit = { id: string; title: string; module: string; summary: string; distance: number };
 
 function bad(status: number, code: string, message: string, headers?: Record<string, string>) {
   return NextResponse.json({ error: { code, message } }, { status, headers });
 }
+
+const elapsed = (t: number) => Math.round((performance.now() - t) * 100) / 100;
 
 export async function POST(req: NextRequest) {
   const started = performance.now();
@@ -36,13 +41,15 @@ export async function POST(req: NextRequest) {
     if (err instanceof BodyTooLarge) return bad(413, "payload_too_large", "Request body is too large.");
     return bad(400, "bad_request", "Body must be JSON.");
   }
-  const query = (body as { query?: unknown })?.query;
-  const kRaw = (body as { k?: unknown })?.k ?? 8;
+  const { query, k: kRaw = 8, mode = "live" } = (body ?? {}) as { query?: unknown; k?: unknown; mode?: unknown };
   if (typeof query !== "string" || query.trim().length < 1 || query.length > 200) {
     return bad(422, "validation_error", "query must be 1 to 200 characters.");
   }
   if (typeof kRaw !== "number" || !Number.isInteger(kRaw) || kRaw < 1 || kRaw > 20) {
     return bad(422, "validation_error", "k must be an integer from 1 to 20.");
+  }
+  if (mode !== "live" && mode !== "snapshot") {
+    return bad(422, "validation_error", 'mode must be "live" or "snapshot".');
   }
   const k = kRaw;
 
@@ -52,53 +59,30 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ source: "none", results: [], totalMs: elapsed(started), note: "no_known_words" });
   }
 
-  if (ENGINE_URL && DEMO_KEY) {
-    try {
-      const res = await fetch(`${ENGINE_URL.replace(/\/$/, "")}/collections/demo/search`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-API-Key": DEMO_KEY },
-        body: JSON.stringify({ vector: Array.from(vector), k, ef_search: 64, include_metadata: true }),
-        signal: AbortSignal.timeout(ENGINE_TIMEOUT_MS),
-        cache: "no-store",
-      });
-      if (res.ok) {
-        const payload = (await res.json()) as {
-          results?: { id: string; distance: number; metadata?: Record<string, unknown> }[];
-          took_ms?: number;
-        };
-        if (Array.isArray(payload.results)) {
-          const results: Hit[] = payload.results.map((r) => ({
-            id: String(r.id),
-            title: String(r.metadata?.title ?? r.id),
-            module: String(r.metadata?.module ?? ""),
-            summary: String(r.metadata?.summary ?? ""),
-            distance: Number(r.distance),
-          }));
-          return NextResponse.json({
-            source: "engine",
-            results,
-            engineMs: typeof payload.took_ms === "number" ? payload.took_ms : null,
-            totalMs: elapsed(started),
-          });
-        }
-      }
-    } catch {
-      // Timeout or network failure: fall through to the snapshot. The error is not echoed.
+  if (mode === "live") {
+    const live = await searchEngine(vector, k);
+    if (live) {
+      const results: Hit[] = live.hits.map((r) => ({
+        id: String(r.id),
+        title: String(r.metadata?.title ?? r.id),
+        module: String(r.metadata?.module ?? ""),
+        summary: String(r.metadata?.summary ?? ""),
+        distance: Number(r.distance),
+      }));
+      return NextResponse.json({ source: "engine", results, engineMs: live.tookMs, totalMs: elapsed(started) });
     }
   }
 
-  // Graceful degradation: exact cosine search over the same embeddings, in this route handler.
+  // Snapshot: exact cosine search over the same embeddings the engine holds.
   const t = performance.now();
   const top = cosineTopK(data.docVectors, data.dim, vector, k);
   const results: Hit[] = top.map(({ index, distance }) => ({ ...data.docs[index]!, distance }));
   return NextResponse.json({
     source: "snapshot",
-    reason: ENGINE_URL && DEMO_KEY ? "engine_unreachable" : "engine_not_configured",
+    reason: mode === "snapshot" ? "requested" : "engine_unreachable",
     results,
     snapshotMs: elapsed(t),
     totalMs: elapsed(started),
     corpusSize: data.docs.length,
   });
 }
-
-const elapsed = (t: number) => Math.round((performance.now() - t) * 100) / 100;
