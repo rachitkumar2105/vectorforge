@@ -1,0 +1,98 @@
+{
+ "url": "https://vectorforge-olive.vercel.app/",
+ "command": "pnpm dlx lighthouse@12.8.2 <url> --form-factor=mobile --only-categories=performance,accessibility,best-practices,seo --chrome-flags=--headless=new",
+ "conditions": "run from this laptop while its CPU was 30-45 percent busy with unrelated work",
+ "performance_median": 94,
+ "runs": [
+  {
+   "run": 1,
+   "fetched": "2026-10-26T19:26:32.390Z",
+   "runtimeError": null,
+   "scores": {
+    "performance": 88,
+    "accessibility": 100,
+    "best-practices": 100,
+    "seo": 100
+   },
+   "metrics": {
+    "first-contentful-paint": "1.0 s",
+    "largest-contentful-paint": "2.4 s",
+    "total-blocking-time": "400 ms",
+    "cumulative-layout-shift": "0",
+    "server-response-time": "Root document took 60 ms"
+   }
+  },
+  {
+   "run": 2,
+   "fetched": "2026-10-26T19:26:59.721Z",
+   "runtimeError": null,
+   "scores": {
+    "performance": 88,
+    "accessibility": 100,
+    "best-practices": 100,
+    "seo": 100
+   },
+   "metrics": {
+    "first-contentful-paint": "1.1 s",
+    "largest-contentful-paint": "2.4 s",
+    "total-blocking-time": "350 ms",
+    "cumulative-layout-shift": "0",
+    "server-response-time": "Root document took 60 ms"
+   }
+  },
+  {
+   "run": 3,
+   "fetched": "2026-10-26T19:27:26.531Z",
+   "runtimeError": null,
+   "scores": {
+    "performance": 96,
+    "accessibility": 100,
+    "best-practices": 100,
+    "seo": 100
+   },
+   "metrics": {
+    "first-contentful-paint": "1.1 s",
+    "largest-contentful-paint": "2.3 s",
+    "total-blocking-time": "170 ms",
+    "cumulative-layout-shift": "0",
+    "server-response-time": "Root document took 60 ms"
+   }
+  },
+  {
+   "run": 4,
+   "fetched": "2026-10-26T19:28:23.510Z",
+   "runtimeError": null,
+   "scores": {
+    "performance": 94,
+    "accessibility": 100,
+    "best-practices": 100,
+    "seo": 100
+   },
+   "metrics": {
+    "first-contentful-paint": "1.1 s",
+    "largest-contentful-paint": "2.2 s",
+    "total-blocking-time": "230 ms",
+    "cumulative-layout-shift": "0",
+    "server-response-time": "Root document took 60 ms"
+   }
+  },
+  {
+   "run": 5,
+   "fetched": "2026-10-26T19:28:46.331Z",
+   "runtimeError": null,
+   "scores": {
+    "performance": 96,
+    "accessibility": 100,
+    "best-practices": 100,
+    "seo": 100
+   },
+   "metrics": {
+    "first-contentful-paint": "1.1 s",
+    "largest-contentful-paint": "2.2 s",
+    "total-blocking-time": "190 ms",
+    "cumulative-layout-shift": "0",
+    "server-response-time": "Root document took 60 ms"
+   }
+  }
+ ]
+}
