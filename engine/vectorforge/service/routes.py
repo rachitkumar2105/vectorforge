@@ -107,6 +107,20 @@ def _get(db: Database, name: str) -> Any:
         raise ApiError(404, "not_found", "collection not found") from None
 
 
+# The public demo key is read-only and anonymous, so it also gets a smaller search budget than
+# the documented API limits: enough for any real demo query, far from the most expensive search.
+DEMO_MAX_K = 20
+DEMO_MAX_EF = 256
+DEMO_MAX_NPROBE = 64
+
+
+def _check_demo_limits(body: SearchRequest) -> None:
+    caps = (("k", body.k, DEMO_MAX_K), ("ef_search", body.ef_search, DEMO_MAX_EF))
+    for name, value, cap in (*caps, ("nprobe", body.nprobe, DEMO_MAX_NPROBE)):
+        if value is not None and value > cap:
+            raise ApiError(422, "validation_error", f"{name} is limited to {cap} for this key")
+
+
 @router.get("/healthz")
 def healthz() -> dict[str, str]:
     return {"status": "ok"}
@@ -184,6 +198,8 @@ def upsert(name: str, body: UpsertRequest, request: Request, who: Caller, db: DB
 def search(name: str, body: SearchRequest, request: Request, who: Caller, db: DB) -> SearchResponse:
     _require_read(request, who, name)
     _limit(request, who, "search")
+    if who.role == "demo":
+        _check_demo_limits(body)
     c = _get(db, name)
     if len(body.vector) != c.manifest.dim:
         raise ApiError(422, "validation_error", f"vector must have dimension {c.manifest.dim}")

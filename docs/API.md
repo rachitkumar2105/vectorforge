@@ -24,6 +24,7 @@ Missing or wrong key: `401`. Valid key without permission: `403`.
 | `k` | 1 to 1000 | `422` |
 | Metadata per vector | 4 KiB serialized, flat object, scalar values | `422` |
 | Rate limit (per key) | token bucket: search 20/s burst 40, writes 5/s burst 10 | `429` + `Retry-After` |
+| Demo key search budget | `k` <= 20, `ef_search` <= 256, `nprobe` <= 64 | `422` |
 
 ## Endpoints
 
