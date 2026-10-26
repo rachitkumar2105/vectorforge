@@ -14,7 +14,7 @@ item is verified against a live host.
 | S3 CSRF | N/A | No cookie authentication anywhere: the engine uses an `X-API-Key` header and the site sets 0 cookies (`curl -D -`). |
 | S4 File uploads | N/A | No file uploads. Payload limits: engine 4 MiB by Content-Length and streamed bytes, batch 1000, NaN/Infinity rejected (tests); demo route 2 KiB before parsing (`web/tests/body-limit.test.ts`, live check: 2 MB body -> 413 with and without chunking). |
 | S5 BOLA/IDOR | N/A | No user-owned objects. The demo key is confined to the demo collection and no key gets 401 (`test_demo_key_is_read_only_and_scoped`, `test_missing_and_wrong_keys_are_401`). |
-| S6 Rate limiting | FAIL, accepted | Token buckets per key for search and writes, failed-auth budget per address, demo-route bucket, all tested with 429 + `Retry-After`. Not a shared store: accepted in writing in `docs/DECISIONS.md` D14 for a single-machine engine. |
+| S6 Rate limiting | FAIL, accepted | Token buckets per key for search and writes, failed-auth budget per address, demo-route bucket and a separate `/api/engine-health` bucket (1/s, burst 10), all with 429 + `Retry-After`. Not a shared store: accepted in writing in `docs/DECISIONS.md` D14 for a single-machine engine. |
 | S7 JWT | N/A | Not used. |
 | S8 API secrets server-side | PASS | Keys from environment only, hidden from `repr` (`test_from_env_parses_values`). `grep -rlE "VECTORFORGE_DEMO_KEY\|VECTORFORGE_ENGINE_URL\|X-API-Key" web/.next/static`: 0 files. Throwaway key appeared 0 times in the container's logs. |
 | S9 Password hashing | N/A | No passwords. |
@@ -24,7 +24,7 @@ item is verified against a live host.
 | S13 Server-side permissions | PASS | Deny by default: every collection route requires a key; writes, listing and `/metrics` require the admin key; the demo key also has a tighter search budget (`test_demo_key_cannot_request_expensive_searches`). |
 | S14 Row-level security | N/A | No database. |
 | S15 Webhooks | N/A | None. |
-| S16 SSRF | PASS | The only server-side fetch goes to the fixed `VECTORFORGE_ENGINE_URL`; no endpoint takes a URL from a request (grep over engine and web). |
+| S16 SSRF | PASS | Server-side fetches go only to the fixed `VECTORFORGE_ENGINE_URL` (`web/lib/engine.ts`: `/readyz` for the status pill, `/collections/demo/search` for live queries); no endpoint takes a URL from a request (grep over engine and web). |
 | S17 Source maps | PASS (local build) | `productionBrowserSourceMaps: false`; `find web/.next/static -name "*.map"`: 0. Not checked on a deployed host. |
 | S18 Default credentials | PASS | No default key. `docker run vectorforge-engine:local` without a key exits with `ConfigError: VECTORFORGE_ADMIN_KEY is not set; refusing to start`. Keys under 32 chars, or a demo key equal to the admin key, are refused. |
 | S19 Logs | PASS (engine) | JSON logs carry route template, status, latency and role only (`test_logs_contain_no_keys_vectors_or_metadata`); unhandled errors log the exception type only. The demo route logs nothing. Hosting-platform request logs are not checked. |

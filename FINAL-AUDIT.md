@@ -17,7 +17,7 @@ author's approval and accounts. This audit does not claim the system is secure.
 | 6 Security | `/security-audit` run and report committed; FAILs fixed or accepted | Passed | `SECURITY.md`; findings 1, 3, 4, 5, 6, 9 fixed in separate commits; S6 accepted in writing (DECISIONS D14). |
 | 7 Benchmark | results from a real run; HNSW dominates flat at equal recall | Passed | `python bench/run_bench.py` (log `bench/results/run.log`); `dominates_flat: true` on both datasets. |
 | 8 Site | nine widths, reduced motion, Tab walk, console clean, Lighthouse >= 90 mobile | Passed with one re-measurement pending | `DEMO-REPORT.md`. Lighthouse 93 to 97 performance, 100 accessibility over five runs on the pre-audit-fix build; the post-fix rerun was invalidated by unrelated CPU load and is pending. |
-| 9 Deploy | production URL, demo end to end, site survives engine stopped | **Not done** | Rehearsed locally only: engine container + seeded demo + site, "Live engine" answer, then engine stopped and the page fell back with a notice (`DEMO-REPORT.md`). Needs Fly/Railway, Vercel, a domain and approval. |
+| 9 Deploy | production URL, demo end to end, site survives engine stopped | **Pending your account steps** | Target changed to free tiers (DECISIONS D16): engine on Render free (`render.yaml`, image pre-builds the demo index from the committed seed; ready in 37 s at 0.1 CPU / 512 MB), site on Vercel Hobby. Rehearsed locally: live search, sleeping engine (paused container), engine down (stopped container) all verified (`DEMO-REPORT.md`). Steps and env vars: `docs/DEPLOY.md`. |
 | 10 Final audit | this file and `docs/INTERVIEW.md` | Done | this file; `docs/INTERVIEW.md` (20 questions). |
 
 ## Security checklist (full table and evidence in `SECURITY.md`)

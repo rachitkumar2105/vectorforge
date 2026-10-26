@@ -100,6 +100,28 @@ and the admin key appeared 0 times in the engine's logs.
   Permissions-Policy, X-Frame-Options and COOP on every page (see SECURITY.md).
 - `/privacy` and `/terms` render with a "Draft, not legal advice" notice; favicon `app/icon.svg`.
 
+### Engine status pill (live search section only) — `web/scripts/qa/pill/`, results in `docs/demo/pill/`
+
+Run with `bash web/scripts/qa/run-all.sh` against the production build wired to a local engine
+container (`engine/Dockerfile`); a paused container stands in for a sleeping Render instance and a
+stopped one for an unavailable engine.
+
+| Check | Result |
+| --- | --- |
+| Warm engine (`warm.js`) | checking at 15 ms, engine live at 329 ms, never "waking"; pill faded to opacity 0 after the 2 s hold; section layout did not move |
+| Sleeping engine (`waking.js`) | checking, then waking at 2.3 s; counter ticking ("· 4s", "· 5s"); dot `engine-pulse 1.6s cubic-bezier(0.45, 0, 0.25, 1)`; input enabled; query answered from the snapshot and labelled; engine live at 24 s with the input ("compress data") and all 8 results kept; next query labelled live engine; no layout shift |
+| Reduced motion (`reduced.js`) | waking dot `animation-name: none`, `transform: none`; text still "waking engine, about 45s" |
+| Hidden tab (`hidden.js`) | 0 health pings during 20 s hidden, counter frozen at 11 s; 1 ping within 1.5 s of becoming visible |
+| Engine down (`down.js`, fake clock) | checking, waking, then "engine asleep, showing saved results" (persists); polling stopped at 12 pings (no more after another simulated minute); search returned 8 results labelled "Saved snapshot results" |
+| Reserved width (`fit.js`) | all four state texts fit at all nine widths; pill box 343 px at 375, 382 px at 414, 360 px from 768 up; box never resized |
+| Engine down, whole page | console clean, 0 CSP violations, interaction sweep 0 errors at 375 and 1440; nine widths without overflow (screenshots taken with the engine stopped) |
+| Lighthouse, engine down (`lighthouse/summary-engine-down.json`) | performance 93 and 92, accessibility/best practices/SEO 100, FCP 0.9 to 1.0 s, CLS 0 (one run hit a Lighthouse trace error); CPU was 30 to 50 percent busy with unrelated work |
+
+Bugs these runs found and fixed: result list stuck empty after the engine-state change (exit
+animation never completing), result items and the visualizer ring stuck at opacity 0 (motion's
+opacity animations under the nonce CSP; replaced with CSS keyframes, motion removed), pill text
+truncated at 1440, grey block flashing behind unrevealed limitation items.
+
 ## Not verified / assumed
 
 - **Lighthouse after the security-audit fixes.** A rerun on the final build was attempted while
