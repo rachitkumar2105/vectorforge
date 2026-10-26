@@ -112,7 +112,9 @@ def test_recall_rises_with_nprobe(ivf_setup: tuple[IVFIndex, np.ndarray, np.ndar
     assert recalls[0] < recalls[-1]
 
 
-def test_nprobe_equal_nlist_is_exhaustive(ivf_setup: tuple[IVFIndex, np.ndarray, np.ndarray]) -> None:
+def test_nprobe_equal_nlist_is_exhaustive(
+    ivf_setup: tuple[IVFIndex, np.ndarray, np.ndarray],
+) -> None:
     index, queries, truth = ivf_setup
     found = np.stack([index.search(q, k=10, nprobe=index.nlist).labels for q in queries])
     assert recall_at_k(found, truth, 10) == 1.0

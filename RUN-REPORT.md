@@ -52,3 +52,31 @@ runs: Windows 11, Python 3.12.3 in `~/.venvs/vectorforge`, 12 logical cores, 15.
 - The heuristic vs simple gap is small on isotropic Gaussian data. The paper's claim that the
   heuristic matters most on clustered data is not yet measured here; the Phase 7 benchmark on
   SIFT/GloVe is where that shows up.
+
+## Phase 3: IVF and int8 quantization
+
+### Verified
+- `cd engine && pytest --cov=vectorforge -q`: `70 passed in 119.09s`, total coverage 93.78%.
+- `test_nprobe_equal_nlist_is_exhaustive`: recall@10 = 1.0 at nprobe == nlist (8000 clustered
+  vectors, nlist=32). `test_recall_rises_with_nprobe`: non-decreasing over nprobe 1..32.
+- `test_quantizer_round_trip_error_within_half_step`: every element within step/2 (+1e-5).
+- Gate numbers from `python bench/scripts/ivf_gate.py` (50k x 64-d, 200 Gaussian clusters,
+  200 queries, nlist=128):
+
+  | nprobe | recall@10 float32 | recall@10 int8 |
+  | --- | --- | --- |
+  | 1 | 0.3160 | 0.3125 |
+  | 4 | 0.6110 | 0.6015 |
+  | 8 | 0.8265 | 0.8075 |
+  | 16 | 0.9650 | 0.9355 |
+  | 32 | 0.9995 | 0.9640 |
+  | 128 | 1.0000 | 0.9645 |
+
+  Memory: vector storage 12,800,000 B float32 vs 3,200,512 B int8 (**4.00x**); whole index
+  13,232,768 B vs 3,633,280 B (3.64x; centroids and label lists are not compressed).
+  Max reconstruction error 0.05092, equal to the documented bound max(step/2) = 0.05092.
+  **Recall cost of int8: about 3.5 points of recall@10 at full probe (1.0000 -> 0.9645).**
+
+### Not verified / assumed
+- The int8 ranges are learned from the training sample (up to 256 x nlist points). Data drifting
+  outside that range is clipped; the cost of that is not measured here.
