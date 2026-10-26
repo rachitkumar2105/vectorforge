@@ -120,14 +120,23 @@ def test_demo_key_is_read_only_and_scoped(client: TestClient) -> None:
     make(client, "private")
     client.post("/collections/demo/vectors", json={"vectors": vectors(5)}, headers=admin())
     assert client.get("/collections/demo", headers=demo()).status_code == 200
-    r = client.post("/collections/demo/search", json={"vector": [0, 0, 0, 0], "k": 2}, headers=demo())
+    r = client.post(
+        "/collections/demo/search", json={"vector": [0, 0, 0, 0], "k": 2}, headers=demo()
+    )
     assert r.status_code == 200 and len(r.json()["results"]) == 2
-    assert client.post("/collections/demo/vectors", json={"vectors": vectors(1)}, headers=demo()).status_code == 403
+    assert (
+        client.post(
+            "/collections/demo/vectors", json={"vectors": vectors(1)}, headers=demo()
+        ).status_code
+        == 403
+    )
     assert client.delete("/collections/demo/vectors/v1", headers=demo()).status_code == 403
     assert client.delete("/collections/demo", headers=demo()).status_code == 403
     assert client.get("/collections", headers=demo()).status_code == 403
     assert client.get("/collections/private", headers=demo()).status_code == 403
-    r = client.post("/collections/private/search", json={"vector": [0, 0, 0, 0], "k": 1}, headers=demo())
+    r = client.post(
+        "/collections/private/search", json={"vector": [0, 0, 0, 0], "k": 1}, headers=demo()
+    )
     assert r.status_code == 403
     assert client.get("/metrics", headers=demo()).status_code == 403
 
@@ -174,8 +183,15 @@ def test_create_validation(client: TestClient, body: dict[str, object]) -> None:
 
 def test_unknown_collection_is_404_everywhere(client: TestClient) -> None:
     assert client.get("/collections/nope", headers=admin()).status_code == 404
-    assert client.post("/collections/nope/vectors", json={"vectors": vectors(1)}, headers=admin()).status_code == 404
-    r = client.post("/collections/nope/search", json={"vector": [0, 0, 0, 0], "k": 1}, headers=admin())
+    assert (
+        client.post(
+            "/collections/nope/vectors", json={"vectors": vectors(1)}, headers=admin()
+        ).status_code
+        == 404
+    )
+    r = client.post(
+        "/collections/nope/search", json={"vector": [0, 0, 0, 0], "k": 1}, headers=admin()
+    )
     assert r.status_code == 404 and r.json()["error"]["code"] == "not_found"
     assert client.delete("/collections/nope/vectors/x", headers=admin()).status_code == 404
 
@@ -299,7 +315,9 @@ def test_validation_errors_do_not_echo_input(client: TestClient) -> None:
     secret_value = "metadata-secret-value-123"
     r = client.post(
         "/collections/docs/vectors",
-        json={"vectors": [{"id": "a", "values": [1, 2, 3, 4], "metadata": {"s": {"x": secret_value}}}]},
+        json={
+            "vectors": [{"id": "a", "values": [1, 2, 3, 4], "metadata": {"s": {"x": secret_value}}}]
+        },
         headers=admin(),
     )
     assert r.status_code == 422
@@ -341,12 +359,16 @@ def test_search_rate_limit_returns_429_with_retry_after(tmp_path: Path) -> None:
     with TestClient(create_app(settings(tmp_path, search_rate=(1.0, 3)))) as c:
         make(c, "docs")
         codes = [
-            c.post("/collections/docs/search", json={"vector": [0, 0, 0, 0], "k": 1}, headers=admin()).status_code
+            c.post(
+                "/collections/docs/search", json={"vector": [0, 0, 0, 0], "k": 1}, headers=admin()
+            ).status_code
             for _ in range(5)
         ]
         assert codes[:3] == [200, 200, 200]
         assert codes[3] == 429
-        r = c.post("/collections/docs/search", json={"vector": [0, 0, 0, 0], "k": 1}, headers=admin())
+        r = c.post(
+            "/collections/docs/search", json={"vector": [0, 0, 0, 0], "k": 1}, headers=admin()
+        )
         assert r.status_code == 429 and int(r.headers["Retry-After"]) >= 1
 
 
@@ -356,12 +378,19 @@ def test_write_rate_limit_is_separate_bucket(tmp_path: Path) -> None:
         r1 = c.post("/collections/docs/vectors", json={"vectors": vectors(1)}, headers=admin())
         r2 = c.post("/collections/docs/vectors", json={"vectors": vectors(1)}, headers=admin())
         assert (r1.status_code, r2.status_code) == (200, 429)
-        assert c.post("/collections/docs/search", json={"vector": [0, 0, 0, 0], "k": 1}, headers=admin()).status_code == 200
+        assert (
+            c.post(
+                "/collections/docs/search", json={"vector": [0, 0, 0, 0], "k": 1}, headers=admin()
+            ).status_code
+            == 200
+        )
 
 
 def test_repeated_auth_failures_are_rate_limited(tmp_path: Path) -> None:
     with TestClient(create_app(settings(tmp_path, auth_fail_rate=(0.1, 3)))) as c:
-        codes = [c.get("/collections", headers={"X-API-Key": "x" * 40}).status_code for _ in range(5)]
+        codes = [
+            c.get("/collections", headers={"X-API-Key": "x" * 40}).status_code for _ in range(5)
+        ]
         assert codes[:3] == [401, 401, 401] and codes[3] == 429
 
 
@@ -370,7 +399,9 @@ def test_repeated_auth_failures_are_rate_limited(tmp_path: Path) -> None:
 
 def test_metrics_prometheus_format(tmp_path: Path) -> None:
     summary = tmp_path / "summary.json"
-    summary.write_text(json.dumps({"headline": [{"dataset": "sift", "index": "hnsw", "recall_at_10": 0.97}]}))
+    summary.write_text(
+        json.dumps({"headline": [{"dataset": "sift", "index": "hnsw", "recall_at_10": 0.97}]})
+    )
     with TestClient(create_app(settings(tmp_path / "d", bench_summary=summary))) as c:
         make(c, "docs")
         c.post("/collections/docs/vectors", json={"vectors": vectors(10)}, headers=admin())
@@ -379,9 +410,15 @@ def test_metrics_prometheus_format(tmp_path: Path) -> None:
         r = c.get("/metrics", headers=admin())
         text = r.text
     assert r.status_code == 200 and r.headers["content-type"].startswith("text/plain")
-    assert 'vectorforge_requests_total{method="POST",route="/collections/{name}/search",status="200"} 1' in text
+    assert (
+        'vectorforge_requests_total{method="POST",route="/collections/{name}/search",status="200"} 1'
+        in text
+    )
     assert "# TYPE vectorforge_request_duration_seconds histogram" in text
-    assert 'vectorforge_request_duration_seconds_bucket{route="/collections/{name}/search",le="+Inf"} 1' in text
+    assert (
+        'vectorforge_request_duration_seconds_bucket{route="/collections/{name}/search",le="+Inf"} 1'
+        in text
+    )
     assert 'vectorforge_index_vectors{collection="docs"} 10' in text
     assert 'vectorforge_benchmark_recall_at_10{dataset="sift",index="hnsw"} 0.97' in text
 
@@ -393,20 +430,32 @@ def test_internal_errors_are_generic(client: TestClient, monkeypatch: pytest.Mon
         raise RuntimeError("secret internal path C:/srv/data")
 
     monkeypatch.setattr("vectorforge.collection.Collection.search", boom)
-    r = client.post("/collections/docs/search", json={"vector": [0, 0, 0, 0], "k": 1}, headers=admin())
+    r = client.post(
+        "/collections/docs/search", json={"vector": [0, 0, 0, 0], "k": 1}, headers=admin()
+    )
     assert r.status_code == 500
     assert r.json() == {"error": {"code": "internal_error", "message": "internal error"}}
     assert "secret" not in r.text
 
 
-def test_logs_contain_no_keys_vectors_or_metadata(client: TestClient, caplog: pytest.LogCaptureFixture) -> None:
+def test_logs_contain_no_keys_vectors_or_metadata(
+    client: TestClient, caplog: pytest.LogCaptureFixture
+) -> None:
     caplog.set_level(logging.DEBUG)
     make(client, "docs")
-    item = {"id": "doc-1", "values": [0.123456, 0.654321, 0.111111, 0.999999], "metadata": {"t": "private-meta"}}
+    item = {
+        "id": "doc-1",
+        "values": [0.123456, 0.654321, 0.111111, 0.999999],
+        "metadata": {"t": "private-meta"},
+    }
     client.post("/collections/docs/vectors", json={"vectors": [item]}, headers=admin())
-    client.post("/collections/docs/search", json={"vector": item["values"], "k": 1}, headers=admin())
+    client.post(
+        "/collections/docs/search", json={"vector": item["values"], "k": 1}, headers=admin()
+    )
     client.get("/collections", headers={"X-API-Key": "w" * 40})
-    logged = "\n".join(r.getMessage() + json.dumps(getattr(r, "fields", {})) for r in caplog.records)
+    logged = "\n".join(
+        r.getMessage() + json.dumps(getattr(r, "fields", {})) for r in caplog.records
+    )
     assert "request" in logged
     for forbidden in (ADMIN, "w" * 40, "private-meta", "0.123456", "doc-1"):
         assert forbidden not in logged
@@ -442,5 +491,9 @@ def test_data_survives_restart(tmp_path: Path) -> None:
         c.post("/collections/docs/vectors", json={"vectors": vectors(20)}, headers=admin())
     with TestClient(create_app(settings(tmp_path))) as c:
         assert c.get("/collections/docs", headers=admin()).json()["count"] == 20
-        r = c.post("/collections/docs/search", json={"vector": vectors(20)[3]["values"], "k": 1}, headers=admin())
+        r = c.post(
+            "/collections/docs/search",
+            json={"vector": vectors(20)[3]["values"], "k": 1},
+            headers=admin(),
+        )
         assert r.json()["results"][0]["id"] == "v3"

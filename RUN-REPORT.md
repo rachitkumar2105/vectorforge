@@ -80,3 +80,42 @@ runs: Windows 11, Python 3.12.3 in `~/.venvs/vectorforge`, 12 logical cores, 15.
 ### Not verified / assumed
 - The int8 ranges are learned from the training sample (up to 256 x nlist points). Data drifting
   outside that range is clipped; the cost of that is not measured here.
+
+## Phase 4: Persistence, WAL and crash recovery
+
+### Verified
+- `cd engine && pytest --cov=vectorforge -q`: `126 passed in 152.36s`, total coverage 95.28%
+  (wal.py 98%, segment.py 99%, collection.py 97%).
+- Gate, crash recovery 10 times: `for i in $(seq 1 10); do pytest tests/test_crash_recovery.py -q; done`
+  printed `10 passed` ten times (100 runs, each with two hard-kill/reopen cycles, hnsw/flat/ivf).
+- Torn writes really happen under the chunked-write fault injection:
+  `python ../bench/scripts/crash_stats.py` -> `30 kills: {'clean tail': 26, 'torn payload': 4};
+  total torn bytes discarded 266`, with no acknowledged write lost.
+- Unit tests cut the WAL at every boundary class (torn header, torn payload, CRC flip, absurd
+  length) and check truncation to the last good record.
+- Saved and reloaded collections return identical ids and distances
+  (`test_close_and_reopen_returns_identical_results`, all three index types).
+
+### Not verified / assumed
+- Power-loss durability (fsync reaching stable storage) cannot be tested by killing a process;
+  it relies on the OS honouring `fsync`. On Windows, directory fsync after rename is skipped (NTFS
+  journals the rename); on Linux it is performed but only exercised in CI, not locally.
+- Kill signal on this machine is `TerminateProcess` (Windows `Popen.kill()`); SIGKILL proper is
+  what Linux CI would use. Both are uncatchable hard kills.
+
+## Phase 5: Query service
+
+### Verified
+- `cd engine && pytest --cov=vectorforge -q`: `179 passed, 1 warning in 158.13s`, total coverage
+  **95.17%** (gate is 85%). The warning is Starlette's deprecation notice about `httpx` in its
+  TestClient, not a test problem.
+- 53 API contract tests (`tests/test_service.py`) via httpx/TestClient: auth (401/403, demo key
+  scope), validation (422 for malformed arrays, NaN/Infinity/1e999, bad ids, nested or oversized
+  metadata, batch > 1000, k/ef/nprobe bounds), 413 by Content-Length and by streamed chunks,
+  404 on unknown collections, 429 + Retry-After, Prometheus output, generic 500s, logs free of
+  keys/vectors/metadata/ids, CORS allowlist, docs off in production, restart persistence.
+- Live smoke test against uvicorn on port 8765 with a throwaway key: healthz, readyz, 401 without
+  key, create, upsert, search all returned the expected JSON; `grep -c <key> server.log` -> `0`.
+
+### Not verified / assumed
+- GitHub push and CI run: not done; pushing needs the author's approval and a remote.
