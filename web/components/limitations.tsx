@@ -32,9 +32,9 @@ export function Limitations({ headline }: { headline: Headline }) {
     { title: "Two static keys are the whole auth model.", body: "An admin key and a read-only demo key, from environment variables. No users, no rotation API, no per-tenant isolation. Rate limits are per process." },
   ];
   return (
-    <ul className="grid gap-px overflow-hidden border border-rule bg-rule md:grid-cols-2">
+    <ul className="grid border-l border-t border-rule md:grid-cols-2">
       {items.map((it) => (
-        <Reveal as="li" key={it.title} className="bg-bg p-6 md:p-8">
+        <Reveal as="li" key={it.title} className="border-b border-r border-rule p-6 md:p-8">
           <h3 className="text-step-0 font-medium">{it.title}</h3>
           <p className="mt-2 text-step--1 leading-relaxed text-ink-dim">{it.body}</p>
         </Reveal>

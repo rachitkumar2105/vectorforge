@@ -31,19 +31,19 @@ export function EnginePill() {
 
   const seconds = Math.floor(elapsedMs / 1000);
   return (
-    <div className="h-9 w-full shrink-0 md:w-[21.5rem]">
+    <div className="h-9 w-full shrink-0 md:w-[22.5rem]">
       <div
         className="engine-pill flex h-9 w-full items-center gap-2.5 rounded-full border border-rule bg-panel px-3.5"
         data-visible={pillVisible ? "true" : "false"}
         aria-hidden={pillVisible ? undefined : true}
       >
         <span className="engine-dot shrink-0" data-state={state} aria-hidden="true" />
-        <span className="min-w-0 flex-1 truncate font-mono text-step--1 text-ink" aria-live="polite">
-          {TEXT[state]}
-        </span>
-        {/* Fixed-width slot: the counter appears without moving anything. Not announced. */}
-        <span className="num w-[4ch] shrink-0 text-right text-step--1 text-ink-dim" aria-hidden="true">
-          {state === "waking" ? `${seconds}s` : ""}
+        <span className="min-w-0 flex-1 truncate font-mono text-step--1 text-ink">
+          <span aria-live="polite">{TEXT[state]}</span>
+          {/* The counter is not announced: the live region only speaks when the state changes. */}
+          {state === "waking" ? (
+            <span className="num text-ink-dim" aria-hidden="true">{` · ${seconds}s`}</span>
+          ) : null}
         </span>
       </div>
     </div>

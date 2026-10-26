@@ -41,3 +41,12 @@ const SERVER_SNAPSHOT: MonitorSnapshot = { state: "checking", elapsedMs: 0, pill
 export function useEngine(): MonitorSnapshot {
   return useSyncExternalStore(monitor.subscribe, monitor.get, () => SERVER_SNAPSHOT);
 }
+
+/** Just the state, for components that should not re-render on every counter tick. */
+export function useEngineState(): MonitorSnapshot["state"] {
+  return useSyncExternalStore(
+    monitor.subscribe,
+    () => monitor.get().state,
+    () => SERVER_SNAPSHOT.state,
+  );
+}
