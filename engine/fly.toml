@@ -1,4 +1,7 @@
-# Fly.io deployment for the engine. Secrets are set with `fly secrets set`, never here:
+# Alternative deployment with a persistent volume (Fly.io, paid). The free deployment is Render
+# (render.yaml at the repository root). Deploy from the repository root:
+#   fly deploy --config engine/fly.toml --dockerfile engine/Dockerfile .
+# Secrets are set with `fly secrets set`, never here:
 #   fly secrets set VECTORFORGE_ADMIN_KEY=... VECTORFORGE_DEMO_KEY=...
 app = "vectorforge-engine"
 primary_region = "sin"

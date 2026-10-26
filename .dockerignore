@@ -1,0 +1,11 @@
+# Docker build context is the repository root (see engine/Dockerfile). Send only what the image
+# needs: the engine package and the three demo seed files. Everything else is excluded.
+*
+!engine/pyproject.toml
+!engine/README.md
+!engine/vectorforge/
+!web/data/demo/seed.json
+!web/data/demo/docs.json
+!web/data/demo/docs.bin
+**/__pycache__
+**/*.pyc

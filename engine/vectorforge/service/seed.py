@@ -86,3 +86,34 @@ def apply_seed(db: Database, seed_dir: Path) -> None:
             ]
         )
     log_event(logger, "seeded collection", collection=name, count=len(docs))
+
+
+def build_data_dir(seed_dir: Path, data_dir: Path) -> int:
+    """Seed into ``data_dir`` and checkpoint, so the result can be baked into an image.
+
+    Used by the Dockerfile at build time: on a 0.1-CPU free instance, building the HNSW graph
+    for the demo at startup would take minutes, while loading a checkpoint takes seconds.
+    Returns the number of live vectors in the seeded collection.
+    """
+    db = Database(data_dir)
+    db.load_all()
+    apply_seed(db, seed_dir)
+    name = json.loads((seed_dir / "seed.json").read_text(encoding="utf-8"))["collection"]["name"]
+    count = db.get(name).count
+    db.close_all()  # checkpoints: snapshot written, WAL emptied
+    return count
+
+
+def main() -> None:  # pragma: no cover - build-time CLI, exercised by the Dockerfile
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Bake a seeded VectorForge data directory.")
+    parser.add_argument("--seed-dir", type=Path, required=True)
+    parser.add_argument("--data-dir", type=Path, required=True)
+    args = parser.parse_args()
+    count = build_data_dir(args.seed_dir, args.data_dir)
+    print(f"seeded {count} vectors into {args.data_dir}")
+
+
+if __name__ == "__main__":  # pragma: no cover
+    main()
