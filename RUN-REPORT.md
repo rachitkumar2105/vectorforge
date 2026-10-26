@@ -119,3 +119,20 @@ runs: Windows 11, Python 3.12.3 in `~/.venvs/vectorforge`, 12 logical cores, 15.
 
 ### Not verified / assumed
 - GitHub push and CI run: not done; pushing needs the author's approval and a remote.
+
+## Phase 6-8 (in progress)
+
+### Verified
+- `python bench/run_bench.py` (full log `bench/results/run.log`): SIFT and GloVe, 200k base each.
+  `dominates_flat: true` for both. Headline (summary.json): SIFT HNSW ef=40 recall@10 0.954 at
+  976.4 q/s vs exact 22.8 q/s (42.8x); FAISS 9.5x faster at same recall. GloVe ef=120 recall@10
+  0.959 at 167.1 q/s vs exact 27.9 (6.0x); FAISS 12.6x faster.
+- `pip-audit --skip-editable` and `pnpm audit`: no known vulnerabilities (after D11 upgrades).
+- Web: `pnpm typecheck` clean, `pnpm lint` clean, `pnpm test` 12 pass, `pnpm build` succeeds;
+  no `.map` files in `.next/static`.
+
+### Not verified / assumed (open)
+- Browser QA not yet run (scripts in `web/scripts/qa/`): nine widths, reduced motion, Tab walk,
+  console, Lighthouse. DEMO-REPORT.md not written.
+- Docker image build, gitleaks scan, `/security-audit`, FINAL-AUDIT.md: not done.
+- Push, Vercel and Fly deploys: need the author's approval and accounts.
