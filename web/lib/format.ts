@@ -15,3 +15,6 @@ export function fmtBytes(b: number): string {
 }
 
 export const fmtMs = (ms: number) => (ms < 1 ? ms.toFixed(3) : ms < 10 ? ms.toFixed(2) : ms.toFixed(1));
+
+/** Axis ticks: 20, 500, 2k, 10k. */
+export const fmtTick = (v: number) => (v >= 1000 ? `${+(v / 1000).toPrecision(3)}k` : `${+v.toPrecision(3)}`);

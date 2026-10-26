@@ -19,22 +19,22 @@ export function SiteNav() {
           <IconMark className="text-trace" />
           <span>VectorForge</span>
         </Link>
-        <ul className="hidden items-center gap-1 md:flex">
+        <ul className="hidden items-center gap-1 lg:flex">
           {LINKS.map((l) => (
             <li key={l.href}>
-              <Link href={l.href} className="link inline-flex min-h-11 items-center px-3 font-mono text-step--1 no-underline hover:underline">
+              <Link href={l.href} className="nav-link inline-flex min-h-11 items-center px-3 font-mono text-step--1">
                 {l.label}
               </Link>
             </li>
           ))}
         </ul>
         <div className="flex items-center gap-2">
-          <a href={REPO_URL} className="btn" rel="noopener noreferrer">
+          <a href={REPO_URL} className="btn" rel="noopener noreferrer" aria-label="Source code on GitHub">
             <IconGithub />
             <span className="hidden sm:inline">Source</span>
           </a>
           {/* No-JS disclosure menu for narrow screens. */}
-          <details className="relative md:hidden">
+          <details className="relative lg:hidden">
             <summary className="btn list-none [&::-webkit-details-marker]:hidden" aria-label="Sections">
               <IconMenu />
             </summary>

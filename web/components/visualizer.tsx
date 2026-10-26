@@ -288,10 +288,10 @@ function toSvg(svg: SVGSVGElement, e: React.MouseEvent): { x: number; y: number 
 // depth without 3-D transforms (and keeps click mapping exact: it is an invertible affine map).
 const VW = 1000;
 const PW = 640; // plane width
-const PH = 150; // plane depth (foreshortened)
+const PH = 185; // plane depth (foreshortened)
 const SHEAR = 190;
-const LEFT = 70;
-const GAP = 46;
+const LEFT = 110;
+const GAP = 34;
 
 function PerspectiveStage({ graph, frame, query, truth, reduced, onPlace }: StageProps & { reduced: boolean }) {
   const layers = Array.from({ length: graph.maxLevel + 1 }, (_, i) => i);

@@ -1,0 +1,5 @@
+{
+ "messages": [],
+ "cspViolationsAfterInteraction": [],
+ "demoStatus": "Engine not connected. Served from the static snapshot: exact search over the same 3,178 embeddings inside the site's route handler (5.97 ms) \u00c2\u00b7 12.1 ms round trip\n\nbz2.compress\n0.107\n\nCompress a block of data.\n\nlzma.compress\n0.107\n\nCompress a block of data.\n\ngzip.compress\n0.211\n\nCompress data in one "
+}

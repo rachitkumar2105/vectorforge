@@ -1,7 +1,9 @@
 // Full keyboard Tab walk: every stop, its accessible name, and whether a focus outline is drawn.
 async (page) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" }); // sessions keep emulation between runs
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("http://localhost:3000/", { waitUntil: "networkidle" });
+  await page.waitForTimeout(3000); // let the idle-time mount of lazy sections happen, as for a real visitor
   const stops = [];
   for (let i = 0; i < 80; i++) {
     await page.keyboard.press("Tab");

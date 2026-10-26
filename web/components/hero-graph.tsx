@@ -5,7 +5,8 @@ import { buildGraph, makeDataset } from "@/lib/hnsw";
 // so it costs no JavaScript and never delays first paint.
 const W = 1600;
 const H = 900;
-const points = makeDataset(110, 2024);
+// 70 nodes: enough to read as a graph, few enough to keep the DOM and layout cost low on phones.
+const points = makeDataset(70, 2024);
 const graph = buildGraph(points, { M: 4, efConstruction: 24, seed: 11 });
 
 type Edge = { a: number; b: number };

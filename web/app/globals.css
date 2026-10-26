@@ -260,3 +260,16 @@ input[type="range"] {
 .hero-delay-3 { animation-delay: 180ms; }
 .hero-delay-4 { animation-delay: 240ms; }
 .hero-delay-5 { animation-delay: 300ms; }
+
+/* Nav: quiet until hovered or focused. */
+.nav-link {
+  color: var(--color-ink-dim);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 0.35em;
+  transition: color 180ms var(--ease-out), text-decoration-color 180ms var(--ease-out);
+}
+.nav-link:hover {
+  color: var(--color-ink);
+  text-decoration-color: var(--color-trace);
+}

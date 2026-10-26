@@ -19,6 +19,10 @@ const nextConfig: NextConfig = {
   // S17: never ship browser source maps in production (this is the default; stated explicitly).
   productionBrowserSourceMaps: false,
   reactStrictMode: true,
+  // Pin the project root to web/ (a stray lockfile in the home directory otherwise confuses
+  // Next's root detection). Builds always run from web/, locally and on Vercel.
+  outputFileTracingRoot: process.cwd(),
+  turbopack: { root: process.cwd() },
   // The search route reads the demo embeddings from disk at runtime; make sure they are bundled.
   outputFileTracingIncludes: { "/api/search": ["./data/demo/**"] },
   async headers() {

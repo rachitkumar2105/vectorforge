@@ -1,16 +1,13 @@
 import { connection } from "next/server";
 
-import { Architecture } from "@/components/architecture";
-import { BenchExplorer } from "@/components/bench-explorer";
 import { Hero } from "@/components/hero";
+import { LazyArchitecture, LazyBench, LazyDemo, LazyVisualizer } from "@/components/lazy-sections";
 import { Limitations } from "@/components/limitations";
 import { Reveal } from "@/components/reveal";
-import { SearchDemo } from "@/components/search-demo";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteNav } from "@/components/site-nav";
-import { Visualizer } from "@/components/visualizer";
 import { headlineFor, headlines, results } from "@/lib/bench";
-import { demoData } from "@/lib/demo-data";
+import demoMeta from "@/data/demo/meta.json";
 
 function SectionHead({ id, eyebrow, title, children }: { id: string; eyebrow: string; title: string; children: React.ReactNode }) {
   return (
@@ -27,7 +24,7 @@ function SectionHead({ id, eyebrow, title, children }: { id: string; eyebrow: st
 export default async function Page() {
   // Rendered per request so the CSP nonce from proxy.ts can be applied to every script.
   await connection();
-  const corpusSize = (await demoData()).docs.length;
+  const corpusSize = demoMeta.count;
   const headline = headlineFor("sift") ?? headlines[0]!;
 
   return (
@@ -46,7 +43,7 @@ export default async function Page() {
                 nodes and miss fewer true neighbours.
               </p>
             </SectionHead>
-            <Visualizer />
+            <LazyVisualizer />
           </div>
         </section>
 
@@ -60,7 +57,7 @@ export default async function Page() {
                 not hidden.
               </p>
             </SectionHead>
-            <BenchExplorer results={results} />
+            <LazyBench results={results} />
           </div>
         </section>
 
@@ -72,7 +69,7 @@ export default async function Page() {
                 The browser never holds a key. If the engine is down, the page says so and answers from a static snapshot.
               </p>
             </SectionHead>
-            <SearchDemo corpusSize={corpusSize} />
+            <LazyDemo corpusSize={corpusSize} />
           </div>
         </section>
 
@@ -81,7 +78,7 @@ export default async function Page() {
             <SectionHead id="architecture" eyebrow="04 · The machine" title="Write path, then read path">
               <p>Scroll through the steps. Each one is a single decision the engine makes, and why.</p>
             </SectionHead>
-            <Architecture />
+            <LazyArchitecture />
           </div>
         </section>
 

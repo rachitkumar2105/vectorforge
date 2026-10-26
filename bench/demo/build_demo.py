@@ -315,6 +315,8 @@ def main() -> None:
     (OUT / "docs.json").write_text(
         json.dumps(docs, separators=(",", ":")), encoding="utf-8", newline="\n"
     )
+    # Tiny file the page imports for the corpus size, so rendering never loads the 4 MB corpus.
+    (OUT / "meta.json").write_text(json.dumps({"count": len(docs)}), encoding="utf-8", newline="\n")
     print(f"{len(docs)} documents, vocab {len(vocab)} words -> {OUT}")
 
 

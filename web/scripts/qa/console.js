@@ -1,5 +1,6 @@
 // Load, interact with every section, and report console errors/warnings and CSP violations.
 async (page) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" }); // sessions keep emulation between runs
   const msgs = [];
   page.on("console", (m) => { if (["error", "warning"].includes(m.type())) msgs.push(`${m.type()}: ${m.text()}`); });
   page.on("pageerror", (e) => msgs.push(`pageerror: ${e.message}`));

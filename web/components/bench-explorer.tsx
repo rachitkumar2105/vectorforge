@@ -9,7 +9,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useInView } from "@/components/reveal";
 import type { BenchResult, BenchSeries } from "@/lib/bench";
-import { fmtBytes, fmtMs, fmtQps } from "@/lib/format";
+import { fmtBytes, fmtMs, fmtQps, fmtTick } from "@/lib/format";
 import { useMediaQuery } from "@/lib/use-media-query";
 
 const STYLE: Record<string, { stroke: string; dash?: string; width: number }> = {
@@ -36,7 +36,7 @@ export function BenchExplorer({ results }: { results: BenchResult[] }) {
   const point = selected?.points[Math.min(sel.index, selected.points.length - 1)];
 
   return (
-    <div className="grid gap-6">
+    <div className="grid min-w-0 gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div role="group" aria-label="Dataset" className="flex gap-2">
           {results.map((r) => (
@@ -68,7 +68,7 @@ export function BenchExplorer({ results }: { results: BenchResult[] }) {
         ) : null}
       </div>
 
-      <div ref={ref} className="panel p-3 md:p-5">
+      <div ref={ref} className="panel min-w-0 p-3 md:p-5">
         <Chart data={data} shown={shown} sel={sel} onSelect={setSel} drawn={seen} />
         <Readout series={selected} point={point} />
         {!narrow ? <Legend series={data.series} /> : null}
@@ -103,7 +103,7 @@ function Chart({
   }, []);
 
   const height = Math.max(280, Math.min(520, Math.round(width * 0.58)));
-  const margin = { top: 16, right: 16, bottom: 48, left: 64 };
+  const margin = { top: 30, right: 16, bottom: 48, left: 56 };
   const innerW = Math.max(0, width - margin.left - margin.right);
   const innerH = height - margin.top - margin.bottom;
 
@@ -117,6 +117,21 @@ function Chart({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [data, innerH],
   );
+
+  // Log-axis ticks at 1, 2 and 5 times powers of ten (powers of ten only when narrow), so the
+  // labels never pile up the way automatic log ticks do between 1k and 9k.
+  const yTicks = useMemo(() => {
+    const [lo, hi] = y.domain() as [number, number];
+    const steps = innerW < 420 ? [1] : [1, 2, 5];
+    const out: number[] = [];
+    for (let e = Math.floor(Math.log10(lo)); e <= Math.ceil(Math.log10(hi)); e++) {
+      for (const m of steps) {
+        const v = m * 10 ** e;
+        if (v >= lo && v <= hi) out.push(v);
+      }
+    }
+    return out;
+  }, [y, innerW]);
 
   // Arrow keys walk the selected series; tab order reaches the chart once.
   const onKey = (e: React.KeyboardEvent) => {
@@ -156,7 +171,7 @@ function Chart({
   const flat = data.series.find((s) => s.id === "vf-flat")?.points[0];
 
   return (
-    <div ref={box} className="w-full">
+    <div ref={box} className="w-full min-w-0 overflow-hidden">
       {width > 0 ? (
         <svg
           width={width}
@@ -170,7 +185,10 @@ function Chart({
           className="block touch-pan-y"
         >
           <Group left={margin.left} top={margin.top}>
-            <GridRows scale={y} width={innerW} stroke="#1b252c" numTicks={5} />
+            <GridRows scale={y} width={innerW} stroke="#1b252c" tickValues={yTicks} />
+            <text x={-margin.left + 4} y={-14} className="fill-ink-dim font-mono text-[12px]">
+              queries / second (log scale)
+            </text>
             <GridColumns scale={x} height={innerH} stroke="#1b252c" numTicks={6} />
             {flat ? (
               <line x1={0} x2={innerW} y1={y(flat.qps)} y2={y(flat.qps)} stroke="#93a3ac" strokeDasharray="3 5" strokeWidth={1} />
@@ -220,14 +238,11 @@ function Chart({
             />
             <AxisLeft
               scale={y}
-              numTicks={5}
+              tickValues={yTicks}
               stroke="#2a3842"
               tickStroke="#2a3842"
-              tickFormat={(v) => fmtQps(Number(v))}
+              tickFormat={(v) => fmtTick(Number(v))}
               tickLabelProps={{ fill: "#93a3ac", fontSize: 12, fontFamily: "var(--font-geist-mono)", textAnchor: "end", dx: -4, dy: 4 }}
-              label="queries / second (log)"
-              labelProps={{ fill: "#93a3ac", fontSize: 12, fontFamily: "var(--font-geist-mono)", textAnchor: "middle" }}
-              labelOffset={40}
             />
             <AxisBottom
               top={innerH}
@@ -298,6 +313,8 @@ function Legend({ series }: { series: BenchSeries[] }) {
 }
 
 function Details({ data }: { data: BenchResult }) {
+  // The full table is ~60 rows; build it only when someone opens it.
+  const [tableOpen, setTableOpen] = useState(false);
   const env = data.environment;
   const vf = data.series.find((s) => s.id === "vf-hnsw");
   const fh = data.series.find((s) => s.id === "faiss-hnsw");
@@ -355,8 +372,9 @@ function Details({ data }: { data: BenchResult }) {
           {data.dominates_flat ? " HNSW still beats exact search at recall@10 of 0.99 or better." : ""}
         </p>
       </div>
-      <details className="panel p-4 md:p-5 lg:col-span-2">
+      <details className="panel p-4 md:p-5 lg:col-span-2" onToggle={(e) => setTableOpen(e.currentTarget.open)}>
         <summary className="flex min-h-11 cursor-pointer items-center font-mono text-step--1">Data table (every point in the chart)</summary>
+        {tableOpen ? (
         <div className="mt-3 overflow-x-auto">
           <table className="w-full min-w-[640px] text-left text-step--1">
             <caption className="sr-only">{`Benchmark points for ${data.dataset.name}`}</caption>
@@ -387,6 +405,7 @@ function Details({ data }: { data: BenchResult }) {
             </tbody>
           </table>
         </div>
+        ) : null}
       </details>
     </div>
   );
