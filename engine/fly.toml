@@ -17,6 +17,9 @@ primary_region = "sin"
 [[mounts]]
   source = "vectorforge_data"
   destination = "/data"
+  # Daily volume snapshots, kept two weeks (audit finding 5). See docs/OPERATIONS.md for restore.
+  scheduled_snapshots = true
+  snapshot_retention = 14
 
 [http_service]
   internal_port = 8000
