@@ -5,14 +5,19 @@
 # Multi-stage. The final image holds the installed wheel, its runtime dependencies and a
 # pre-built demo collection: no compilers, no pip, no tests, no benchmark datasets.
 
-FROM python:3.12-slim AS build
+# Base image pinned by digest (re-audit R4): every Render deploy rebuilds the image, and a moving
+# tag would pull a different, unreviewed base each time. To update: run
+# `docker buildx imagetools inspect python:3.12-slim`, copy the index Digest into PYTHON_IMAGE,
+# rebuild and rerun the image checks.
+ARG PYTHON_IMAGE=python:3.12-slim@sha256:5b8b1421ccb6a525860a77863c049eab5847076cda34e030c75a80c58faf3f3c
+FROM ${PYTHON_IMAGE} AS build
 WORKDIR /src
 ENV PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1
 COPY engine/pyproject.toml engine/README.md ./
 COPY engine/vectorforge ./vectorforge
 RUN pip wheel --wheel-dir /wheels .
 
-FROM python:3.12-slim AS runtime
+FROM ${PYTHON_IMAGE} AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 \
     VECTORFORGE_ENV=production \
     VECTORFORGE_DATA_DIR=/app/data \
