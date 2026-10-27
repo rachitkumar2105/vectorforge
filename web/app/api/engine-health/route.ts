@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { clientKey } from "@/lib/client-key";
+import { coalesce } from "@/lib/coalesce";
 import { pingEngine } from "@/lib/engine";
 import { TokenBucket } from "@/lib/ratelimit";
 
@@ -11,6 +12,8 @@ export const maxDuration = 10;
 
 // The browser polls on a 1-2-4-8 s backoff; this allows that comfortably with a few tabs open.
 const limiter = new TokenBucket(1, 10);
+// One engine request per instance per second, however many tabs or callers are polling.
+const ping = coalesce(() => pingEngine(), 1000);
 
 export async function GET(req: Request) {
   const wait = limiter.take(clientKey(req.headers));
@@ -20,5 +23,5 @@ export async function GET(req: Request) {
       { status: 429, headers: { "Retry-After": String(wait) } },
     );
   }
-  return NextResponse.json({ engine: await pingEngine() });
+  return NextResponse.json({ engine: await ping() });
 }
