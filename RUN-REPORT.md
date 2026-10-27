@@ -181,11 +181,18 @@ runs: Windows 11, Python 3.12.3 in `~/.venvs/vectorforge`, 12 logical cores, 15.
   `All checks passed!`; `black --check vectorforge tests` -> `37 files would be left unchanged.`;
   `mypy vectorforge` -> `Success: no issues found in 25 source files`; `cd web && pnpm test` ->
   `tests 27, pass 27, fail 0`; `pnpm typecheck` and `pnpm lint` clean.
+- Natural cold start on production after 19 minutes idle (`web/scripts/qa/prod/cold-start.js`):
+  waking at 2.6 s, engine live at 24.5 s, first search from the snapshot, next from the engine.
+- Security re-audit of the deploy changes (SECURITY.md R1 to R6). Fixes, each its own commit:
+  R1 production CORS origin only (preflight from localhost now 400), R3 coalesced health pings,
+  R4 base image pinned by digest (image rebuilt and checked). R2 re-accepted in D14.
+- Gate after the fixes: `cd engine && pytest --cov=vectorforge` ->
+  `206 passed, 1 warning in 515.35s`, `Total coverage: 95.36%`; `cd web && pnpm test` ->
+  `tests 30, pass 30, fail 0`; `pnpm typecheck`, `pnpm lint` exit 0; `pnpm build` succeeded.
 
 ### Not verified / assumed
 - No custom domain; no uptime check; preview deployments not exercised.
-- A natural 15-minute Render sleep and wake was not timed on production (rehearsed locally with a
-  paused container).
+- One natural wake was timed; its spread across wakes is not measured.
 - `engine/fly.toml` and the volume restore drill in `docs/OPERATIONS.md` are for a Fly
   deployment that was not used.
 

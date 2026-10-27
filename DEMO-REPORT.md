@@ -171,21 +171,35 @@ returned 503 and `/api/engine-health` returned `{"engine":"down"}` before the ru
 | Nine widths (`suspended-widths.json`, `w*-*.jpg`) | no horizontal overflow; hero, visualizer, benchmarks and architecture render with the engine off |
 | Sections (`suspended-sections.json`) | benchmarks, demo, architecture and limits captured at 1440 and 375, overflow 0 |
 
-The service was then resumed from the dashboard: `/healthz` 200 on the second poll (under 30 s after the click),
-`/readyz` `{"status":"ready"}`, `/api/engine-health` `{"engine":"live"}`, and a POST to
-`/api/search` came back with `"source":"engine"`.
+The service was then resumed from the dashboard: `/healthz` 200 on the second poll (under 30 s
+after the click), `/readyz` `{"status":"ready"}`, `/api/engine-health` `{"engine":"live"}`, and a
+POST to `/api/search` came back with `"source":"engine"`.
+
+Natural cold start (2026-10-27, `web/scripts/qa/prod/cold-start.js`, `docs/demo/prod/cold/`):
+no request reached the engine from 00:34 to 00:53 UTC, past Render's 15-minute idle limit, then
+the script opened the site:
+
+| Check | Result |
+| --- | --- |
+| Pill sequence | checking at 11 ms, "waking engine, about 45s" at 2.6 s, "engine live" at 24.5 s (warm engine: live at 780 ms) |
+| First search while waking | answered from the labelled snapshot |
+| Next search after live | answered by the engine |
+
+The 24.5 s wake is one measurement; Render's own figure is "about a minute", which the pill's
+90 s budget covers.
 
 ## Not verified / assumed
 
 - **Lighthouse on an idle machine.** The production runs above (median 94, two runs at 88) and
   the engine-down local runs (93, 92) all ran with unrelated work on the CPU. An earlier local
-  attempt at 97 percent CPU (79 / 69 / 65) was discarded. No run on an idle machine or from a
-  hosted Lighthouse service exists for the final build.
+  attempt at 97 percent CPU (79 / 69 / 65) was discarded. A hosted run was attempted on
+  2026-10-27: the PageSpeed Insights API answered "Quota exceeded" (no API key) and
+  pagespeed.web.dev stayed on "Running analysis". No run on an idle machine or from a hosted
+  Lighthouse service exists for the final build.
 - **60 fps.** Not profiled with a frame-timing trace; the visualizer and hero graph were checked
   visually and by Lighthouse main-thread metrics only.
 - **Real devices and other browsers.** Only Chrome via Playwright, with emulated viewports;
   no Safari or Firefox, no physical phone.
-- **Cold start on production.** The suspended run covers the engine-down path; a natural
-  15-minute sleep followed by a wake (checking, waking, live) was rehearsed locally with a paused
-  container, not timed on Render.
+- **Cold-start spread.** One natural wake was timed (24.5 s); the variance across wakes is not
+  measured.
 - **Custom domain.** The site runs on the `vercel.app` subdomain only.

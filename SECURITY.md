@@ -72,6 +72,26 @@ also checked against the deployed hosts on 2026-10-27 (see "Production checks" b
 - Engine down: with the Render service suspended the site served the snapshot with 0 console
   errors and 0 CSP violations (DEMO-REPORT, Production).
 
+## Re-audit of changes since the first audit (2026-10-27)
+
+Scope: commits after f9bc438 (seed loader, Dockerfile and `render.yaml`, the engine-health
+route, the search route's `mode`, the engine status monitor) and the deployed hosts.
+
+| # | Finding | Severity | Outcome |
+| --- | --- | --- | --- |
+| R1 | Production engine CORS allowlist also allowed `http://localhost:3000` | Low | Fixed: Render value set to the production origin only; docs no longer suggest localhost for production |
+| R2 | Demo rate limits are per Vercel instance (measured: 32 of 40 parallel requests allowed, burst 8) | Low | Accepted again with the measurement (DECISIONS D14); forged client-IP headers measured to give no advantage |
+| R3 | `/api/engine-health` made one engine request per call | Low | Fixed: one shared ping per instance per second (`web/lib/coalesce.ts`, `web/tests/coalesce.test.ts`) |
+| R4 | Engine base image not pinned | Info | Fixed: `python:3.12-slim@sha256:5b8b1421...` in `engine/Dockerfile` |
+| R5 | `render.yaml` auto-deploys every push to `main`, and `main` has no branch protection (GitHub API `protected: false`) | Info | Listed only: branch protection requiring CI is a repository setting for the author |
+| R6 | Behind Render's proxy all failed-auth attempts share one budget (`VECTORFORGE_CLIENT_IP_HEADER` unset) | Info | Listed only: tested, 9 bad keys then 429 while the site's valid demo key kept working; slows key guessing globally and cannot lock out a valid key |
+
+Commands: gitleaks v8.24.3 over 66 commits, no leaks; `pip-audit --skip-editable` and
+`pnpm audit --prod`, no known vulnerabilities; production probes with `curl` (CORS preflights,
+parallel rate-limit bursts, bad-key bursts, 401/404/405 checks, headers); the 8 JavaScript
+chunks referenced by the home page (588 KB) hold 0 occurrences of the key names, the engine
+host or `sourceMappingURL`.
+
 ## Remaining risks
 
 - Rate limits reset on restart and are per instance (accepted, D14).

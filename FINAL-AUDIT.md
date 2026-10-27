@@ -18,7 +18,7 @@ command recorded next to it or in the linked report. The site is deployed on Ver
 | 6 Security | `/security-audit` run and report committed; FAILs fixed or accepted | Passed | `SECURITY.md`; findings 1, 3, 4, 5, 6, 9 fixed in separate commits; S6 accepted in writing (DECISIONS D14). |
 | 7 Benchmark | results from a real run; HNSW dominates flat at equal recall | Passed | `python bench/run_bench.py` (log `bench/results/run.log`); `dominates_flat: true` on both datasets. |
 | 8 Site | nine widths, reduced motion, Tab walk, console clean, Lighthouse >= 90 mobile | Passed, with measured variance | `DEMO-REPORT.md`. Local: 93 to 97 performance over five runs. Production (final build): median performance **94** over five runs (88, 88, 96, 94, 96), accessibility, best practices and SEO 100 on all five; the two 88s ran while the laptop CPU was busy with unrelated work. |
-| 9 Deploy | production URL, demo end to end, site survives engine stopped | Passed (no custom domain) | Free tiers (DECISIONS D16): engine on Render free from `render.yaml`, site on Vercel Hobby. Production: live search answered by the engine (1.80 ms server search, 638.6 ms round trip), pill checking to live in 780 ms. Render service **suspended** from the dashboard: pill ended at "engine asleep, showing saved results", polling stopped at 7 pings, search served 8 labelled snapshot results, console and CSP clean, nine widths without overflow. Service resumed and live again. Evidence: `docs/demo/prod/`, `docs/demo/prod/suspended/`, `DEMO-REPORT.md`. |
+| 9 Deploy | production URL, demo end to end, site survives engine stopped | Passed (no custom domain) | Free tiers (DECISIONS D16): engine on Render free from `render.yaml`, site on Vercel Hobby. Production: live search answered by the engine (1.80 ms server search, 638.6 ms round trip), pill checking to live in 780 ms. Render service **suspended** from the dashboard: pill ended at "engine asleep, showing saved results", polling stopped at 7 pings, search served 8 labelled snapshot results, console and CSP clean, nine widths without overflow. Service resumed and live again. Natural cold start after 19 minutes idle: waking at 2.6 s, live at 24.5 s, first search served from the snapshot. Evidence: `docs/demo/prod/`, `docs/demo/prod/suspended/`, `docs/demo/prod/cold/`, `DEMO-REPORT.md`. |
 | 10 Final audit | this file and `docs/INTERVIEW.md` | Done | this file; `docs/INTERVIEW.md` (20 questions). |
 
 ## Security checklist (full table and evidence in `SECURITY.md`)
@@ -46,8 +46,8 @@ known vulnerabilities.
 - Engine: `cd engine && pytest --cov=vectorforge` -> **206 passed, total coverage 95.36%** (gate 85%), 2026-10-27.
   Same suite in a `python:3.12-slim` Linux container: 192 passed, 95.14% (before the 7 audit
   regression tests were added).
-- Web: `pnpm test` (node:test) -> **27 passed** (browser HNSW invariants and recall, embedding
-  parity with Python, rate limiter, body limit, client key, engine status monitor). No coverage tool on the web side.
+- Web: `pnpm test` (node:test) -> **30 passed** (browser HNSW invariants and recall, embedding
+  parity with Python, rate limiter, body limit, client key, engine status monitor, ping coalescing). No coverage tool on the web side.
 
 ## Benchmark (single thread, one query at a time, 200,000 base vectors, 1,000 queries)
 
@@ -96,21 +96,23 @@ repository content does not. No dataset, index or `.env` file has ever been comm
 - Benchmark: `python bench/run_bench.py`, log committed.
 - Engine image: `docker build` (89.4 MB); refuses to start without a key; runs as uid 10001; no
   compiler, pip, pytest or faiss inside; health check healthy; key absent from logs.
-- Site: `pnpm lint`, `pnpm typecheck`, `pnpm test` (27), `pnpm build`; browser checks in
+- Site: `pnpm lint`, `pnpm typecheck`, `pnpm test` (30), `pnpm build`; browser checks in
   `DEMO-REPORT.md`, locally and on production, with the engine up, sleeping (local) and suspended (production).
 - Security: `SECURITY.md` (gitleaks, audits, greps, header checks, tests).
 
 ## Not verified or assumed
 
 - **Deployment (Phase 9):** no custom domain, no uptime check, preview deployments not
-  exercised. A natural Render sleep and wake was not timed on production (rehearsed locally with
-  a paused container). Render has no persistent disk, so the restore drill in `docs/OPERATIONS.md`
+  exercised. One natural Render wake was timed (24.5 s after 19 minutes idle); its spread is not
+  measured. Render has no persistent disk, so the restore drill in `docs/OPERATIONS.md`
   (written for a Fly volume) does not apply to this deployment and was not run.
 - **Lighthouse on an idle machine:** every run so far had unrelated CPU load (see DEMO-REPORT).
 - **60 fps:** not profiled with a frame trace.
 - **Other browsers and real phones:** Chrome via Playwright only.
 - **Power-loss durability:** relies on the OS honouring fsync; a process kill cannot test it.
-- **Platform header behaviour:** that Vercel overwrites `x-real-ip` / `x-forwarded-for`.
+- **Platform header behaviour:** that Vercel overwrites `x-real-ip` / `x-forwarded-for` is
+  inferred from rate-limit behaviour (forged headers gained nothing, SECURITY re-audit R2), not
+  seen directly.
 - **Legal pages:** drafts, labelled as such; not reviewed by a lawyer.
 - **`/vc-*` and design skills from the spec:** most were not loaded (DECISIONS D6); the built-in
   code review and `/security-audit` were run; `design-taste-frontend` is not installed here.
@@ -128,10 +130,15 @@ encrypted by the application.
 
 1. Done: repository created, `build/v1` merged into `main`, pushed, CI green.
 2. Done: engine on Render free, site on Vercel Hobby, CORS allowlist set to the production origin
-   (preflight checked), QA scripts and Lighthouse run against production, engine-suspended run.
-3. Connect a custom domain; then update `NEXT_PUBLIC_SITE_URL` on Vercel and
+   only (preflight checked), QA scripts and Lighthouse run against production, engine-suspended
+   run, natural cold start timed.
+3. Done: security re-audit of the deploy changes (SECURITY.md, R1 to R6); R1, R3 and R4 fixed,
+   R2 accepted again (D14), R5 and R6 listed.
+4. Connect a custom domain; then update `NEXT_PUBLIC_SITE_URL` on Vercel and
    `VECTORFORGE_CORS_ORIGINS` on Render to it.
-4. Decide on an uptime check on `/healthz`: it would also keep the free engine from sleeping,
+5. Decide on an uptime check on `/healthz`: it would also keep the free engine from sleeping,
    which the cold-start state was built to tolerate.
-5. Rerun Lighthouse five times on an idle machine.
-6. Have the privacy and terms drafts reviewed (Claude cannot give legal sign-off).
+6. Turn on branch protection for `main` requiring CI, since `render.yaml` deploys every push
+   (re-audit R5; a repository setting).
+7. Rerun Lighthouse five times on an idle machine or with a PageSpeed API key.
+8. Have the privacy and terms drafts reviewed (Claude cannot give legal sign-off).
