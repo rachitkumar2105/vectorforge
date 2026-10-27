@@ -133,11 +133,18 @@ Accepted by the author on 2026-10-26, in writing, for the current deployment sha
 
 - **What:** token buckets live in process memory, in the engine (`RateLimiter`) and in the demo
   route (`TokenBucket`). The audit checklist asks for a shared store.
-- **Why it is acceptable now:** the engine runs as one Fly machine (`min_machines_running = 1`),
-  so its per-key buckets are effectively global. The demo route is read-only, capped at 2 KiB
+- **Why it is acceptable now:** the engine runs as one Render free instance (it was one Fly
+  machine when this was first accepted), so its per-key buckets are effectively global. The demo route is read-only, capped at 2 KiB
   bodies and `k <= 20`, and backed by the engine's own per-key limit and the demo key's tighter
   search budget, so a visitor spread across several Vercel instances gains little.
-- **Residual risk:** buckets reset on restart; each Vercel instance enforces its own demo budget.
+- **Residual risk:** buckets reset on restart (on Render free, after every sleep); each Vercel
+  instance enforces its own demo budget.
+- **Measured on production (re-audit R2, 2026-10-27):** 40 parallel `/api/search` requests
+  (nominal burst 8 per client) got 32 x 200 and 8 x 429, so a burst spread over instances gets
+  about four times the nominal budget. With a distinct forged `X-Forwarded-For` / `X-Real-IP` on
+  each request: 35 x 200 and 5 x 429, no better than without, so forging the client address does
+  not buy fresh buckets. Live searches past the engine's demo-key budget fall back to the
+  snapshot. Re-accepted on these numbers.
 - **Revisit when:** the engine runs more than one machine, or the demo sees abuse. Fix: a shared
   store (Redis / Vercel KV), which is a new dependency and needs approval first.
 
