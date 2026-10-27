@@ -18,7 +18,8 @@ services:
       # Must equal VECTORFORGE_DEMO_KEY on Vercel. Enter it in the Render dashboard.
       - key: VECTORFORGE_DEMO_KEY
         sync: false
-      # Exact origins, comma separated, e.g. https://vectorforge.vercel.app,http://localhost:3000
+      # The production site origin only, exact, e.g. https://vectorforge-olive.vercel.app.
+      # No localhost here: that belongs on a local engine, not the hosted one (re-audit R1).
       - key: VECTORFORGE_CORS_ORIGINS
         sync: false
       - key: VECTORFORGE_ENV

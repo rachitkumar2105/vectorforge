@@ -24,7 +24,7 @@ python -c "import secrets; print(secrets.token_hex(32))"
 | Variable | Value | Notes |
 | --- | --- | --- |
 | `VECTORFORGE_DEMO_KEY` | the value from step 0 | read-only, scoped to the demo collection |
-| `VECTORFORGE_CORS_ORIGINS` | `https://<your-project>.vercel.app,http://localhost:3000` | exact origins, no wildcard; the browser never calls the engine directly, this is defence in depth |
+| `VECTORFORGE_CORS_ORIGINS` | `https://<your-project>.vercel.app` | the production origin only, exact, no wildcard; the browser never calls the engine directly, this is defence in depth. Add `http://localhost:3000` only on a local engine, never on the hosted one |
 
    Set by the blueprint, nothing to do: `VECTORFORGE_ADMIN_KEY` (Render generates a random value;
    you never need it, because the demo is pre-built into the image), `VECTORFORGE_ENV=production`.
