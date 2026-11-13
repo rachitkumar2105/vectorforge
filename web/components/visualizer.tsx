@@ -238,12 +238,12 @@ const clamp01 = (v: number) => Math.min(0.98, Math.max(0.02, v));
 
 function Legend() {
   const items = [
-    { swatch: <circle cx="8" cy="8" r="4" fill="#2a3842" />, label: "node" },
-    { swatch: <circle cx="8" cy="8" r="4" fill="#1e7f6f" />, label: "distance computed" },
-    { swatch: <circle cx="8" cy="8" r="5" fill="none" stroke="#35e0c2" strokeWidth="1.5" />, label: "in the best-ef set" },
-    { swatch: <circle cx="8" cy="8" r="5" fill="#35e0c2" />, label: "being expanded / result" },
-    { swatch: <circle cx="8" cy="8" r="5.5" fill="none" stroke="#f0a43a" strokeWidth="1.5" strokeDasharray="2 2" />, label: "exact top-k missed" },
-    { swatch: <path d="M2 8h12M8 2v12" stroke="#e5ecef" strokeWidth="1.5" />, label: "query" },
+    { swatch: <circle cx="8" cy="8" r="4" fill="#C9BEAA" />, label: "node" },
+    { swatch: <circle cx="8" cy="8" r="4" fill="#DE9A88" />, label: "distance computed" },
+    { swatch: <circle cx="8" cy="8" r="5" fill="none" stroke="#B85042" strokeWidth="1.5" />, label: "in the best-ef set" },
+    { swatch: <circle cx="8" cy="8" r="5" fill="#B85042" />, label: "being expanded / result" },
+    { swatch: <circle cx="8" cy="8" r="5.5" fill="none" stroke="#4A5058" strokeWidth="1.5" strokeDasharray="2 2" />, label: "exact top-k missed" },
+    { swatch: <path d="M2 8h12M8 2v12" stroke="#1F2328" strokeWidth="1.5" />, label: "query" },
   ];
   return (
     <ul className="grid grid-cols-2 gap-x-3 gap-y-2 font-mono text-step--1 text-ink-dim">
@@ -270,10 +270,10 @@ type StageProps = {
 };
 
 function nodeFill(graph: Graph, frame: Frame, layer: number, n: number): string {
-  if (frame.results?.includes(n) && layer === 0) return "#35e0c2";
-  if (frame.current === n && frame.layer === layer) return "#35e0c2";
-  if (frame.visited.get(layer)?.has(n)) return "#1e7f6f";
-  return layer === 0 ? "#2a3842" : "#3a4a55";
+  if (frame.results?.includes(n) && layer === 0) return "#B85042";
+  if (frame.current === n && frame.layer === layer) return "#B85042";
+  if (frame.visited.get(layer)?.has(n)) return "#DE9A88";
+  return layer === 0 ? "#C9BEAA" : "#B3A792";
 }
 
 function toSvg(svg: SVGSVGElement, e: React.MouseEvent): { x: number; y: number } | null {
@@ -325,8 +325,8 @@ function PerspectiveStage({ graph, frame, query, truth, onPlace }: StageProps) {
           <g key={layer}>
             <polygon
               points={corners.map((c) => `${c.x},${c.y}`).join(" ")}
-              fill={layer === 0 ? "#0a0f12" : "#090d10"}
-              stroke={active ? "#35e0c2" : "#1b252c"}
+              fill={layer === 0 ? "#F8F4EC" : "#FAF7F0"}
+              stroke={active ? "#B85042" : "#E7E0D2"}
               strokeWidth={active ? 1.5 : 1}
             />
             <text x={corners[3]!.x - 14} y={corners[3]!.y + 4} textAnchor="end" className="fill-ink-dim font-mono text-[13px]">
@@ -346,7 +346,7 @@ function PerspectiveStage({ graph, frame, query, truth, onPlace }: StageProps) {
       {frame.entries.slice(1).map((e, i) => {
         const a = proj(graph.points[e.node]!, e.layer + 1);
         const b = proj(graph.points[e.node]!, e.layer);
-        return <line key={i} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#35e0c2" strokeWidth="1.5" strokeDasharray="4 4" />;
+        return <line key={i} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#B85042" strokeWidth="1.5" strokeDasharray="4 4" />;
       })}
     </svg>
   );
@@ -365,7 +365,7 @@ function LayerEdges({ graph, layer, proj }: { graph: Graph; layer: number; proj:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [graph, layer]);
   return (
-    <g stroke="#16232a" strokeWidth="1">
+    <g stroke="#E6DED0" strokeWidth="1">
       {lines.map((l, i) => (
         <line key={i} x1={l.a.x} y1={l.a.y} x2={l.b.x} y2={l.b.y} />
       ))}
@@ -375,7 +375,7 @@ function LayerEdges({ graph, layer, proj }: { graph: Graph; layer: number; proj:
 
 function Hops({ frame, layer, graph, proj }: { frame: Frame; layer: number; graph: Graph; proj: Proj }) {
   return (
-    <g stroke="#1e7f6f" strokeWidth="1.25">
+    <g stroke="#DE9A88" strokeWidth="1.25">
       {frame.hops
         .filter((h) => h.layer === layer)
         .map((h, i) => {
@@ -399,8 +399,8 @@ function LayerNodes({ graph, frame, layer, truth, proj }: { graph: Graph; frame:
         return (
           <g key={n}>
             <circle cx={p.x} cy={p.y} r={r} fill={nodeFill(graph, frame, layer, n)} />
-            {inBest ? <circle cx={p.x} cy={p.y} r={r + 3} fill="none" stroke="#35e0c2" strokeWidth="1.25" /> : null}
-            {missed ? <circle cx={p.x} cy={p.y} r={r + 4} fill="none" stroke="#f0a43a" strokeWidth="1.5" strokeDasharray="2 2" /> : null}
+            {inBest ? <circle cx={p.x} cy={p.y} r={r + 3} fill="none" stroke="#B85042" strokeWidth="1.25" /> : null}
+            {missed ? <circle cx={p.x} cy={p.y} r={r + 4} fill="none" stroke="#4A5058" strokeWidth="1.5" strokeDasharray="2 2" /> : null}
           </g>
         );
       })}
@@ -413,7 +413,7 @@ function LayerNodes({ graph, frame, layer, truth, proj }: { graph: Graph; frame:
           cy={proj(graph.points[frame.current]!, layer).y}
           r={r + 7}
           fill="none"
-          stroke="#35e0c2"
+          stroke="#B85042"
           strokeWidth="1.5"
         />
       ) : null}
@@ -422,7 +422,7 @@ function LayerNodes({ graph, frame, layer, truth, proj }: { graph: Graph; frame:
 }
 
 function Crosshair({ at, bright }: { at: { x: number; y: number }; bright: boolean }) {
-  const c = bright ? "#e5ecef" : "#93a3ac";
+  const c = bright ? "#1F2328" : "#5E636B";
   return (
     <g stroke={c} strokeWidth={bright ? 1.75 : 1} opacity={bright ? 1 : 0.6}>
       <line x1={at.x - 9} y1={at.y} x2={at.x + 9} y2={at.y} />

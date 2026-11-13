@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
-/* Tokens: see docs/DESIGN.md. Dark-only instrument palette. */
+/* Tokens: see docs/DESIGN.md. Warm neutrals and terracotta, one light theme. */
 @theme {
-  --color-bg: #07090b;
-  --color-panel: #0c1115;
-  --color-rule: #1b252c;
-  --color-rule-strong: #2a3842;
-  --color-ink: #e5ecef;
-  --color-ink-dim: #93a3ac;
-  --color-trace: #35e0c2;
-  --color-trace-dim: #1e7f6f;
-  --color-signal: #f0a43a;
+  --color-bg: #FDFCF8;
+  --color-panel: #FAF7F1;
+  --color-rule: #E7E0D2;
+  --color-rule-strong: #C9BEAA;
+  --color-ink: #1F2328;
+  --color-ink-dim: #5E636B;
+  --color-trace: #B85042;
+  --color-trace-dim: #DE9A88;
+  --color-signal: #4A5058;
 
   --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -27,7 +27,7 @@
 }
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 html {
@@ -350,5 +350,31 @@ input[type="range"] {
   from {
     opacity: 0;
     transform: scale(0.4);
+  }
+}
+
+/* Bars in the live search telemetry grow from their baseline once (transform only). */
+@media (prefers-reduced-motion: no-preference) {
+  .grow-x,
+  .grow-y {
+    transform-box: fill-box;
+    animation: grow-x 420ms var(--ease-out) both;
+  }
+  .grow-x {
+    transform-origin: left center;
+  }
+  .grow-y {
+    transform-origin: center bottom;
+    animation-name: grow-y;
+  }
+}
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes grow-y {
+  from {
+    transform: scaleY(0);
   }
 }
