@@ -14,22 +14,26 @@ in sequence. An `ef_search` slider changes the breadth live.
 
 ## Palette
 
-Dark-first and dark-only (`color-scheme: dark`). One UI accent, one data counter-colour.
+Warm neutrals and terracotta, one light theme (changed 2026-11-13 at the author's request,
+replacing the dark observatory palette): a cream page, charcoal ink, and dusty terracotta as the
+single accent. It should feel physical and curated, like a printed technical journal. FAISS keeps
+its own series colour, a neutral slate, so terracotta stays the only accent.
 
-| Token | Hex | Use | Contrast on `--bg` |
+| Token | Hex | Use | Contrast on `--bg` / `--panel` |
 | --- | --- | --- | --- |
-| `--bg` | `#07090B` | page field | |
-| `--panel` | `#0C1115` | instrument panels | |
-| `--rule` | `#1B252C` | hairlines, grids | |
-| `--rule-strong` | `#2A3842` | axes, focusable outlines at rest | |
-| `--ink` | `#E5ECEF` | body text | 16.69:1 |
-| `--ink-dim` | `#93A3AC` | secondary text, labels | 7.67:1 |
-| `--trace` | `#35E0C2` | the accent: VectorForge, focus ring, active state | 11.96:1 |
-| `--trace-dim` | `#1E7F6F` | visited nodes, inactive traces | (decorative) |
-| `--signal` | `#F0A43A` | FAISS series and warnings only | 9.57:1 |
+| `--bg` | `#FDFCF8` | page (off-white cream) | |
+| `--panel` | `#FAF7F1` | panels | |
+| `--rule` | `#E7E0D2` | hairlines, grids | |
+| `--rule-strong` | `#C9BEAA` | axes, nodes, outlines at rest | |
+| `--ink` | `#1F2328` | body text (charcoal) | 15.39:1 / 14.77:1 |
+| `--ink-dim` | `#5E636B` | secondary text, labels | 5.89:1 / 5.65:1 |
+| `--trace` | `#B85042` | the accent (terracotta): VectorForge, focus ring, active state | 4.80:1 / 4.61:1 |
+| `--trace-dim` | `#DE9A88` | visited nodes, inactive traces | (decorative) |
+| `--signal` | `#4A5058` | FAISS series and warnings only (slate) | 7.93:1 / 7.61:1 |
 
-Contrast ratios are WCAG relative-luminance ratios against `#07090B`, computed by
-`web/scripts/contrast.mjs` (run it to re-check after any change).
+Contrast ratios are WCAG relative-luminance ratios, computed by `web/scripts/contrast.mjs` (run
+it to re-check after any change). The panel tone was lightened from a first `#F6F2E9` because
+terracotta measured 4.41:1 on it.
 
 Banned, from the spec and the author's rules: purple gradients, rainbow CTAs, glassmorphism and
 backdrop blur, emoji icons, stock or AI photos, testimonials, user counters, "made with" badges,
