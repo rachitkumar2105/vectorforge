@@ -1,7 +1,7 @@
 // WCAG 2.x contrast ratios for the palette in docs/DESIGN.md. Run: node web/scripts/contrast.mjs
-const bg = "#07090B";
-const panel = "#0C1115";
-const colours = { ink: "#E5ECEF", inkDim: "#93A3AC", trace: "#35E0C2", signal: "#F0A43A" };
+const bg = "#FDFCF8";
+const panel = "#FAF7F1";
+const colours = { ink: "#1F2328", inkDim: "#5E636B", trace: "#B85042", signal: "#4A5058" };
 
 function luminance(hex) {
   const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
