@@ -81,7 +81,7 @@ export function Architecture() {
               d={d}
               pathLength={1}
               fill="none"
-              stroke={current.has(id) ? "#35e0c2" : "#1e7f6f"}
+              stroke={current.has(id) ? "#B85042" : "#DE9A88"}
               strokeWidth={current.has(id) ? 2 : 1.25}
               className="trace-draw"
               data-drawn={drawn.has(id) ? "true" : "false"}
@@ -91,7 +91,7 @@ export function Architecture() {
             const on = lit.has(b.id);
             return (
               <g key={b.id} transform={`translate(${b.x} ${b.y})`}>
-                <rect width={BW} height={BH} rx={2} fill="#0c1115" stroke={on ? "#35e0c2" : "#2a3842"} strokeWidth={on ? 1.5 : 1} />
+                <rect width={BW} height={BH} rx={2} fill="#FAF7F1" stroke={on ? "#B85042" : "#C9BEAA"} strokeWidth={on ? 1.5 : 1} />
                 <text x={12} y={24} className={`font-mono text-[14px] ${on ? "fill-trace" : "fill-ink"}`}>{b.label}</text>
                 <text x={12} y={43} className="fill-ink-dim font-mono text-[11px]">{b.sub}</text>
               </g>

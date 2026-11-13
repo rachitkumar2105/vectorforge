@@ -1,4 +1,5 @@
 import { HeroGraph } from "@/components/hero-graph";
+import { HeroLive } from "@/components/hero-live";
 import { IconArrowRight } from "@/components/icons";
 import { headlineFor, headlines } from "@/lib/bench";
 import { fmtInt, fmtMs, fmtQps } from "@/lib/format";
@@ -64,6 +65,7 @@ export function Hero() {
             ) : null}{" "}
             Source: <span className="num">bench/results/summary.json</span>.
           </p>
+          <HeroLive />
         </figure>
       </div>
     </section>

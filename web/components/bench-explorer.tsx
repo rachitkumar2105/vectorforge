@@ -13,12 +13,12 @@ import { fmtBytes, fmtMs, fmtQps, fmtTick } from "@/lib/format";
 import { useMediaQuery } from "@/lib/use-media-query";
 
 const STYLE: Record<string, { stroke: string; dash?: string; width: number }> = {
-  "vf-hnsw": { stroke: "#35e0c2", width: 2.25 },
-  "vf-ivf": { stroke: "#35e0c2", dash: "7 5", width: 1.75 },
-  "vf-ivf-int8": { stroke: "#1e9f8a", dash: "2 4", width: 1.75 },
-  "vf-flat": { stroke: "#e5ecef", width: 2 },
-  "faiss-hnsw": { stroke: "#f0a43a", width: 2.25 },
-  "faiss-ivf": { stroke: "#f0a43a", dash: "7 5", width: 1.75 },
+  "vf-hnsw": { stroke: "#B85042", width: 2.25 },
+  "vf-ivf": { stroke: "#B85042", dash: "7 5", width: 1.75 },
+  "vf-ivf-int8": { stroke: "#CF7A66", dash: "2 4", width: 1.75 },
+  "vf-flat": { stroke: "#1F2328", width: 2 },
+  "faiss-hnsw": { stroke: "#4A5058", width: 2.25 },
+  "faiss-ivf": { stroke: "#4A5058", dash: "7 5", width: 1.75 },
 };
 
 type Sel = { series: string; index: number };
@@ -185,16 +185,16 @@ function Chart({
           className="block touch-pan-y"
         >
           <Group left={margin.left} top={margin.top}>
-            <GridRows scale={y} width={innerW} stroke="#1b252c" tickValues={yTicks} />
+            <GridRows scale={y} width={innerW} stroke="#E7E0D2" tickValues={yTicks} />
             <text x={-margin.left + 4} y={-14} className="fill-ink-dim font-mono text-[12px]">
               queries / second (log scale)
             </text>
-            <GridColumns scale={x} height={innerH} stroke="#1b252c" numTicks={6} />
+            <GridColumns scale={x} height={innerH} stroke="#E7E0D2" numTicks={6} />
             {flat ? (
-              <line x1={0} x2={innerW} y1={y(flat.qps)} y2={y(flat.qps)} stroke="#93a3ac" strokeDasharray="3 5" strokeWidth={1} />
+              <line x1={0} x2={innerW} y1={y(flat.qps)} y2={y(flat.qps)} stroke="#5E636B" strokeDasharray="3 5" strokeWidth={1} />
             ) : null}
             {shown.map((s) => {
-              const st = STYLE[s.id] ?? { stroke: "#e5ecef", width: 1.5 };
+              const st = STYLE[s.id] ?? { stroke: "#1F2328", width: 1.5 };
               const pts = [...s.points].sort((a, b) => a.recall_at_10 - b.recall_at_10);
               return (
                 <g key={s.id}>
@@ -217,7 +217,7 @@ function Chart({
                         cx={x(p.recall_at_10)}
                         cy={y(p.qps)}
                         r={active ? 6 : s.id === "vf-flat" ? 5 : 3}
-                        fill={active ? st.stroke : "#07090b"}
+                        fill={active ? st.stroke : "#FDFCF8"}
                         stroke={st.stroke}
                         strokeWidth={1.5}
                         className={drawn ? "opacity-100 transition-opacity duration-500" : "opacity-0"}
@@ -233,27 +233,27 @@ function Chart({
               y={0}
               width={innerW + 2}
               height={innerH}
-              fill="#0c1115"
+              fill="#FAF7F1"
               className={`origin-right transition-transform duration-700 ease-out motion-reduce:hidden ${drawn ? "scale-x-0" : "scale-x-100"}`}
             />
             <AxisLeft
               scale={y}
               tickValues={yTicks}
-              stroke="#2a3842"
-              tickStroke="#2a3842"
+              stroke="#C9BEAA"
+              tickStroke="#C9BEAA"
               tickFormat={(v) => fmtTick(Number(v))}
-              tickLabelProps={{ fill: "#93a3ac", fontSize: 12, fontFamily: "var(--font-geist-mono)", textAnchor: "end", dx: -4, dy: 4 }}
+              tickLabelProps={{ fill: "#5E636B", fontSize: 12, fontFamily: "var(--font-geist-mono)", textAnchor: "end", dx: -4, dy: 4 }}
             />
             <AxisBottom
               top={innerH}
               scale={x}
               numTicks={6}
-              stroke="#2a3842"
-              tickStroke="#2a3842"
+              stroke="#C9BEAA"
+              tickStroke="#C9BEAA"
               tickFormat={(v) => Number(v).toFixed(2)}
-              tickLabelProps={{ fill: "#93a3ac", fontSize: 12, fontFamily: "var(--font-geist-mono)", textAnchor: "middle" }}
+              tickLabelProps={{ fill: "#5E636B", fontSize: 12, fontFamily: "var(--font-geist-mono)", textAnchor: "middle" }}
               label="recall@10"
-              labelProps={{ fill: "#93a3ac", fontSize: 12, fontFamily: "var(--font-geist-mono)", textAnchor: "middle" }}
+              labelProps={{ fill: "#5E636B", fontSize: 12, fontFamily: "var(--font-geist-mono)", textAnchor: "middle" }}
               labelOffset={16}
             />
           </Group>
@@ -292,7 +292,7 @@ function Legend({ series }: { series: BenchSeries[] }) {
   return (
     <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-2 font-mono text-step--1 text-ink-dim">
       {series.map((s) => {
-        const st = STYLE[s.id] ?? { stroke: "#e5ecef", width: 1.5 };
+        const st = STYLE[s.id] ?? { stroke: "#1F2328", width: 1.5 };
         return (
           <li key={s.id} className="flex items-center gap-2">
             <svg width="28" height="10" aria-hidden="true">
@@ -304,7 +304,7 @@ function Legend({ series }: { series: BenchSeries[] }) {
       })}
       <li className="flex items-center gap-2">
         <svg width="28" height="10" aria-hidden="true">
-          <line x1="0" y1="5" x2="28" y2="5" stroke="#93a3ac" strokeDasharray="3 5" />
+          <line x1="0" y1="5" x2="28" y2="5" stroke="#5E636B" strokeDasharray="3 5" />
         </svg>
         exact-search throughput
       </li>

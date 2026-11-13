@@ -20,9 +20,9 @@ function edgesOn(layer: number): Edge[] {
 }
 
 const layerStyle = [
-  { stroke: "#1b252c", node: "#2a3842", r: 2.2 },
-  { stroke: "#1e4f48", node: "#1e7f6f", r: 3 },
-  { stroke: "#2a9c88", node: "#35e0c2", r: 4 },
+  { stroke: "#E7E0D2", node: "#C9BEAA", r: 2.2 },
+  { stroke: "#EFD5CC", node: "#DE9A88", r: 3 },
+  { stroke: "#D98C79", node: "#B85042", r: 4 },
 ];
 
 export function HeroGraph() {
