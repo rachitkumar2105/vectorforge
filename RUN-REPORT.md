@@ -205,3 +205,37 @@ runs: Windows 11, Python 3.12.3 in `~/.venvs/vectorforge`, 12 logical cores, 15.
 ### Verified
 - GitHub Actions run #4 on `main` at afb4fc9 (https://github.com/rachitkumar2105/vectorforge/actions/runs/40304566096): **success**. engine 3m39s (ANN import guard, ruff, black, mypy, pytest `199 passed`, coverage 95.19%, pip-audit); web 35s (lint, typecheck, `node --test` 20 tests, build, `pnpm audit --prod`); secrets 16s (gitleaks, full history). Runs #1 and #2 failed on an invalid workflow expression (`hashFiles` in a job-level `if`), fixed in afb4fc9.
 - Run #8 on `main` at afeb1ab (https://github.com/rachitkumar2105/vectorforge/actions/runs/40305889903): **success** after bumping to Node 24 actions (checkout 7.0.1, setup-python 7.0.0, setup-node 7.1.0, pnpm/action-setup 6.1.0); engine 3m51s, web 34s, secrets 15s. Annotations: 0 warnings (the Node 20 deprecation warnings are gone), 3 notices that `ubuntu-latest` is migrating to Ubuntu 26.
+
+## Site: warm theme and live search telemetry (2026-11-13)
+
+Theme changed to warm neutrals and terracotta at the author's request (tokens and contrast in
+`docs/DESIGN.md`). The live search demo now searches as you type and shows, for every answer,
+where the time went; all of it is measured, nothing is simulated.
+
+### Verified
+- `node web/scripts/contrast.mjs`: every text colour passes 4.5:1 on page and panel:
+```
+ink     #1F2328 on bg    15.39:1 pass
+ink     #1F2328 on panel 14.77:1 pass
+inkDim  #5E636B on bg    5.89:1 pass
+inkDim  #5E636B on panel 5.65:1 pass
+trace   #B85042 on bg    4.80:1 pass
+trace   #B85042 on panel 4.61:1 pass
+signal  #4A5058 on bg    7.93:1 pass
+signal  #4A5058 on panel 7.61:1 pass
+```
+- `pnpm test`: ℹ tests 30 ℹ pass 30 ℹ fail 0 . `pnpm typecheck` and `pnpm lint`: clean.
+- `next build --webpack` succeeded with Google Fonts mocked (the build container cannot reach
+  fonts.googleapis.com; Vercel builds normally). Production server in headless Chrome at
+  1440 x 1000 and 390 x 844: no console errors under the production nonce CSP, with and without
+  `prefers-reduced-motion`; no horizontal overflow on mobile.
+- Search as you type: typing a 21-character query sent one request (debounced 450 ms, at most one
+  automatic search per 1.1 s, inside the route's burst-8 and 1 per second limit).
+- Timing waterfall: network = browser round trip minus the route's `totalMs`; embed and route =
+  `totalMs` minus the search time; search = `engineMs` (live) or `snapshotMs` (snapshot).
+  Similarity bars and the session strip are drawn with SVG attributes, so no inline styles.
+
+### Not verified / assumed
+- Live-engine answers were not exercised from the build container (no engine credentials there);
+  the live path is unchanged apart from the timing display.
+- Not yet checked in Safari or Firefox.
